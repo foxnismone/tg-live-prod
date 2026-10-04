@@ -1,0 +1,600 @@
+/* ============================================================
+   TEMA — Identidad visual de retail tecnológico (pc Factory)
+   ============================================================
+   Paleta y tipografía extraídas del CSS real de pcfactory.cl:
+
+     Verdes    #ccf6dd  #a9eec5  #43d87e  #2EC269  #3ABA6D  #1D8A48  #013B18
+     Amarillos #e2ff3c  #F2E424  #AC8417
+     Azules    #E2ECFF  #3A7AFF  #2644f9  #051DB1
+     Grises    #FFFFFF  #F1F3F4  #D2D7DC  #BEC5CC  #8F9CA3  #5C6970  #42474A
+     Oferta    #ED801E (naranja)
+
+   Tipografía: Ubuntu (principal) + Signika (secundaria)
+
+   Reglas de precio observadas en el sitio real:
+     · Precio transferencia → NEGRO, bold, grande (es el protagonista)
+     · Etiqueta "Transferencia" → gris oscuro
+     · Precio normal → gris claro, pequeño
+     · Precio de oferta especial → NARANJA #ED801E
+   ============================================================ */
+
+/* ─── Paleta y tipografía ──────────────────────────────── */
+:root {
+  /* Marca */
+  --pcf-green-light:   #ccf6dd;
+  --pcf-green-light-2: #a9eec5;
+  --pcf-green:         #43d87e;
+  --pcf-green-2:       #2EC269;
+  --pcf-green-3:       #3ABA6D;
+  --pcf-green-dark-2:  #1D8A48;
+  --pcf-green-dark:    #013B18;
+
+  --pcf-yellow:        #e2ff3c;
+  --pcf-yellow-dark:   #F2E424;
+  --pcf-yellow-deep:   #AC8417;
+
+  --pcf-blue-light:    #E2ECFF;
+  --pcf-blue-light-2:  #D7E3FC;
+  --pcf-blue-1:        #3A7AFF;
+  --pcf-blue:          #2644f9;
+  --pcf-blue-dark:     #051DB1;
+
+  --pcf-white:         #FFFFFF;
+  --pcf-gray-light:    #F1F3F4;
+  --pcf-gray-light-2:  #EAECEE;
+  --pcf-gray-light-3:  #D2D7DC;
+  --pcf-gray-1:        #BEC5CC;
+  --pcf-gray:          #8F9CA3;
+  --pcf-gray-dark-2:   #5C6970;
+  --pcf-gray-dark-1:   #576167;
+  --pcf-gray-dark:     #42474A;
+  --pcf-black:         #000000;
+
+  --pcf-orange:        #ED801E;
+  --pcf-red:           #E23B3B;
+
+  /* Redefinición del sistema base → tema claro */
+  --bg-base:      var(--pcf-white);
+  --bg-surface:   var(--pcf-white);
+  --bg-elevated:  var(--pcf-gray-light);
+  --bg-overlay:   rgba(255, 255, 255, .96);
+
+  --text-primary:   var(--pcf-gray-dark);
+  --text-secondary: var(--pcf-gray-dark-2);
+  --text-muted:     var(--pcf-gray);
+
+  --brand:        var(--pcf-green);
+  --brand-dark:   var(--pcf-green-2);
+  --brand-glow:   rgba(67, 216, 126, .28);
+  --accent:       var(--pcf-blue);
+  --danger:       var(--pcf-red);
+  --warning:      var(--pcf-orange);
+  --info:         var(--pcf-blue-1);
+
+  --border:       var(--pcf-gray-light-3);
+  --border-light: var(--pcf-gray-1);
+
+  --font: "Ubuntu", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --font-alt: "Signika", var(--font);
+
+  --shadow-sm: 0 1px 3px rgba(66, 71, 74, .10);
+  --shadow-md: 0 4px 14px rgba(66, 71, 74, .12);
+  --shadow-lg: 0 10px 32px rgba(66, 71, 74, .16);
+  --shadow-glow: 0 0 0 3px var(--brand-glow);
+}
+
+/* ─── Base ─────────────────────────────────────────────── */
+body {
+  background: var(--pcf-white);
+  color: var(--pcf-gray-dark);
+}
+
+/* Accesibilidad: el foco debe verse sobre fondo claro */
+:focus-visible {
+  outline: 2px solid var(--pcf-blue);
+  outline-offset: 2px;
+}
+
+.skip-link { background: var(--pcf-green); color: var(--pcf-green-dark); }
+
+/* ─── Barra de anuncios ────────────────────────────────── */
+.topbar {
+  background: var(--pcf-green);
+  color: var(--pcf-green-dark);
+  font-weight: 700;
+}
+.topbar__link { color: var(--pcf-green-dark); }
+
+/* ─── Header ───────────────────────────────────────────── */
+.header {
+  background: var(--pcf-white);
+  border-bottom: 1px solid var(--pcf-gray-light-3);
+  box-shadow: 0 1px 4px rgba(66, 71, 74, .06);
+}
+.logo__mark {
+  background: var(--pcf-green);
+  box-shadow: none;
+  border-radius: 8px;
+}
+.logo__text { color: var(--pcf-gray-dark); }
+.logo__text span { color: var(--pcf-green-2); }
+
+.search__input {
+  background: var(--pcf-white);
+  border: 1.5px solid var(--pcf-gray-light-3);
+  color: var(--pcf-gray-dark);
+  border-radius: 4px;
+}
+.search__input::placeholder { color: var(--pcf-gray); }
+.search__input:focus {
+  border-color: var(--pcf-green);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+
+.icon-btn { color: var(--pcf-gray-dark); }
+.icon-btn:hover { background: var(--pcf-gray-light); color: var(--pcf-green-2); }
+
+.badge {
+  background: var(--pcf-green);
+  color: var(--pcf-green-dark);
+  border-color: var(--pcf-white);
+}
+
+.header__promo {
+  border-color: var(--pcf-gray-light-3);
+  color: var(--pcf-gray-dark-2);
+}
+.header__promo:hover { border-color: var(--pcf-green); color: var(--pcf-green-2); }
+.header__promo strong { color: var(--pcf-gray-dark); }
+
+/* ─── Navegación ───────────────────────────────────────── */
+.navbar {
+  background: var(--pcf-white);
+  border-bottom: 1px solid var(--pcf-gray-light-3);
+}
+.navbar__link {
+  color: var(--pcf-gray-dark);
+  border-radius: 4px;
+  font-weight: 500;
+}
+.navbar__link:hover {
+  background: var(--pcf-gray-light);
+  color: var(--pcf-green-2);
+}
+.navbar__link.is-active {
+  background: var(--pcf-green-light);
+  color: var(--pcf-green-dark-2);
+  font-weight: 700;
+  border-bottom: 3px solid var(--pcf-green);
+  border-radius: 4px 4px 0 0;
+}
+
+/* ─── Hero ─────────────────────────────────────────────── */
+.hero {
+  background:
+    linear-gradient(180deg, var(--pcf-green-light) 0%, rgba(204, 246, 221, 0) 70%),
+    var(--pcf-white);
+  border-bottom: 1px solid var(--pcf-gray-light-3);
+}
+.hero__eyebrow {
+  background: var(--pcf-yellow);
+  border: none;
+  color: var(--pcf-gray-dark);
+  font-weight: 800;
+}
+.hero__title { color: var(--pcf-gray-dark); }
+.hero__title em {
+  background: none;
+  -webkit-text-fill-color: var(--pcf-green-dark-2);
+  color: var(--pcf-green-dark-2);
+}
+.hero__text { color: var(--pcf-gray-dark-2); }
+
+.stat__value { color: var(--pcf-green-dark-2); }
+.stat__label { color: var(--pcf-gray); }
+.hero__stats { border-top-color: var(--pcf-gray-light-3); }
+
+.benefit-card {
+  background: var(--pcf-white);
+  border: 1px solid var(--pcf-gray-light-3);
+  box-shadow: var(--shadow-md);
+}
+.benefit__icon {
+  background: var(--pcf-green-light);
+  color: var(--pcf-green-dark-2);
+}
+.benefit__title { color: var(--pcf-gray-dark); }
+.benefit__desc { color: var(--pcf-gray-dark-2); }
+
+/* ─── Botones ──────────────────────────────────────────── */
+.btn--primary {
+  background: var(--pcf-green);
+  color: var(--pcf-green-dark);
+  border-color: var(--pcf-green);
+  box-shadow: none;
+  font-weight: 700;
+}
+.btn--primary:hover:not(:disabled) {
+  background: var(--pcf-green-2);
+  border-color: var(--pcf-green-2);
+  transform: none;
+}
+
+.btn--secondary {
+  background: var(--pcf-white);
+  color: var(--pcf-gray-dark);
+  border-color: var(--pcf-gray-1);
+}
+.btn--secondary:hover:not(:disabled) {
+  background: var(--pcf-gray-light);
+  border-color: var(--pcf-gray-dark-2);
+}
+
+.btn--ghost { color: var(--pcf-gray-dark-2); }
+.btn--ghost:hover { background: var(--pcf-gray-light); color: var(--pcf-green-2); }
+
+.btn--danger { background: var(--pcf-red); color: #fff; }
+
+/* ─── Secciones ────────────────────────────────────────── */
+.section__title { color: var(--pcf-gray-dark); }
+.section__title::before {
+  background: var(--pcf-green);
+}
+.section__subtitle { color: var(--pcf-gray-dark-2); }
+
+/* ─── Tarjeta de producto ──────────────────────────────── */
+.product-card {
+  background: var(--pcf-white);
+  border: 1px solid var(--pcf-gray-light-3);
+  border-radius: 8px;
+  box-shadow: none;
+}
+.product-card:hover {
+  border-color: var(--pcf-gray-1);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.product-card__media {
+  background: var(--pcf-white);
+  border-bottom: 1px solid var(--pcf-gray-light-2);
+}
+
+.product-card__brand {
+  color: var(--pcf-gray);
+  font-weight: 700;
+  letter-spacing: .03em;
+}
+.product-card__name {
+  color: var(--pcf-gray-dark);
+  font-weight: 500;
+}
+.product-card__rating { color: var(--pcf-gray); }
+.stars { color: var(--pcf-orange); }
+
+/* Precio: el de transferencia manda, en NEGRO y grande */
+.price-cash__label {
+  color: var(--pcf-gray-dark-2);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: .8rem;
+}
+.price-cash__value {
+  color: var(--pcf-black);
+  font-weight: 800;
+  font-size: 1.45rem;
+  letter-spacing: -.02em;
+}
+.price-normal { color: var(--pcf-gray); }
+.price-normal__value { color: var(--pcf-gray); }
+
+.installments { color: var(--pcf-gray-dark-2); }
+.installments strong { color: var(--pcf-blue); }
+
+.pickup-badge { color: var(--pcf-green-dark-2); font-weight: 700; }
+
+/* Sellos */
+.flag { border-radius: 3px; font-weight: 800; }
+.flag--new      { background: var(--pcf-blue); color: #fff; }
+.flag--discount { background: var(--pcf-orange); color: #fff; box-shadow: none; }
+.flag--sale     { background: var(--pcf-orange); color: #fff; }
+.flag--low      { background: var(--pcf-yellow); color: var(--pcf-gray-dark); }
+.flag--out      { background: var(--pcf-gray-1); color: #fff; }
+
+/* ─── Estados / carga ──────────────────────────────────── */
+.state { color: var(--pcf-gray-dark-2); }
+.state__title { color: var(--pcf-gray-dark); }
+.skeleton {
+  background: linear-gradient(90deg, var(--pcf-gray-light) 25%, var(--pcf-gray-light-2) 50%, var(--pcf-gray-light) 75%);
+  background-size: 200% 100%;
+  border-radius: 8px;
+}
+
+/* ─── Filtros ──────────────────────────────────────────── */
+.filters {
+  background: var(--pcf-gray-light);
+  border: 1px solid var(--pcf-gray-light-3);
+  border-radius: 8px;
+}
+.field__label { color: var(--pcf-gray-dark-2); }
+.input, .select {
+  background: var(--pcf-white);
+  border: 1px solid var(--pcf-gray-1);
+  color: var(--pcf-gray-dark);
+  border-radius: 4px;
+}
+.input:focus, .select:focus { border-color: var(--pcf-green); }
+
+/* ─── Categorías ───────────────────────────────────────── */
+.cat-card {
+  background: var(--pcf-white);
+  border: 1px solid var(--pcf-gray-light-3);
+  border-radius: 8px;
+}
+.cat-card:hover {
+  border-color: var(--pcf-green);
+  box-shadow: var(--shadow-sm);
+}
+.cat-card__icon { background: var(--pcf-gray-light); }
+.cat-card:hover .cat-card__icon { background: var(--pcf-green-light); }
+.cat-card__name { color: var(--pcf-gray-dark); }
+.cat-card__count { color: var(--pcf-gray); }
+
+/* ─── Gamer Zone ───────────────────────────────────────── */
+.gamerzone {
+  background:
+    linear-gradient(180deg, var(--pcf-blue-light) 0%, rgba(226, 236, 255, 0) 60%),
+    var(--pcf-white);
+  border-color: var(--pcf-gray-light-3);
+}
+.gamerzone__eyebrow {
+  background: var(--pcf-blue);
+  border: none;
+  color: #fff;
+}
+.gamerzone__title { color: var(--pcf-gray-dark); }
+.gamerzone__text { color: var(--pcf-gray-dark-2); }
+
+/* ─── Tiendas ──────────────────────────────────────────── */
+.section--alt {
+  background: var(--pcf-gray-light);
+  border-color: var(--pcf-gray-light-3);
+}
+.store-card {
+  background: var(--pcf-white);
+  border: 1px solid var(--pcf-gray-light-3);
+}
+.store-card:hover { border-color: var(--pcf-green); }
+.store-card__icon { background: var(--pcf-green-light); color: var(--pcf-green-dark-2); }
+.store-card__name { color: var(--pcf-gray-dark); }
+.store-card__meta { color: var(--pcf-gray); }
+.stores__note {
+  background: var(--pcf-white);
+  border-left-color: var(--pcf-blue);
+  color: var(--pcf-gray-dark-2);
+}
+
+/* ─── Medios de pago ───────────────────────────────────── */
+.payment-card {
+  background: var(--pcf-white);
+  border: 1px solid var(--pcf-gray-light-3);
+}
+.payment-card:hover { border-color: var(--pcf-gray-1); }
+.payment-card__title { color: var(--pcf-gray-dark); }
+.payment-card__desc { color: var(--pcf-gray-dark-2); }
+
+/* ─── Carrito lateral ──────────────────────────────────── */
+.drawer {
+  background: var(--pcf-white);
+  border-left: 1px solid var(--pcf-gray-light-3);
+}
+.drawer--left { border-right: 1px solid var(--pcf-gray-light-3); }
+.drawer__head, .drawer__foot {
+  border-color: var(--pcf-gray-light-3);
+}
+.drawer__foot { background: var(--pcf-gray-light); }
+.drawer__title { color: var(--pcf-gray-dark); }
+
+.cart-item { border-bottom-color: var(--pcf-gray-light-2); }
+.cart-item__media { background: var(--pcf-gray-light); }
+.cart-item__name { color: var(--pcf-gray-dark); }
+.cart-item__price { color: var(--pcf-black); font-weight: 700; }
+
+.qty { background: var(--pcf-white); border-color: var(--pcf-gray-1); }
+.qty__btn { color: var(--pcf-gray-dark-2); }
+.qty__btn:hover { background: var(--pcf-gray-light); color: var(--pcf-green-2); }
+
+.cart-line { color: var(--pcf-gray-dark-2); }
+.cart-line--total { color: var(--pcf-gray-dark); border-top-color: var(--pcf-gray-light-3); }
+.cart-installment {
+  background: var(--pcf-blue-light);
+  border-color: var(--pcf-blue-light-2);
+  color: var(--pcf-gray-dark-2);
+}
+.cart-installment strong { color: var(--pcf-blue); }
+
+/* ─── Modal ────────────────────────────────────────────── */
+.modal {
+  background: var(--pcf-white);
+  border: 1px solid var(--pcf-gray-light-3);
+}
+.modal__head {
+  background: var(--pcf-white);
+  border-bottom-color: var(--pcf-gray-light-3);
+}
+.modal__foot { border-top-color: var(--pcf-gray-light-3); }
+.modal__head h2 { color: var(--pcf-gray-dark); }
+
+/* Detalle de producto */
+.pd__media { background: var(--pcf-gray-light); }
+.pd__prices {
+  background: var(--pcf-gray-light);
+  border: 1px solid var(--pcf-gray-light-3);
+}
+.pd__price-key { color: var(--pcf-gray-dark-2); }
+.pd__price-val--cash { color: var(--pcf-black); }
+.pd__price-val--credit { color: var(--pcf-gray-dark); }
+.pd__installments {
+  border-top-color: var(--pcf-gray-light-3);
+  color: var(--pcf-gray-dark-2);
+}
+.pd__installments strong { color: var(--pcf-blue); }
+.pd__desc { color: var(--pcf-gray-dark-2); }
+.pd__meta-row { border-bottom-color: var(--pcf-gray-light-2); }
+.pd__meta-key { color: var(--pcf-gray); }
+.pd__store { background: var(--pcf-white); border: 1px solid var(--pcf-gray-light-3); }
+.pd__store-qty { color: var(--pcf-green-dark-2); }
+.pd__store-qty--low { color: var(--pcf-orange); }
+
+/* ─── Formularios ──────────────────────────────────────── */
+.form-label { color: var(--pcf-gray-dark); }
+.form-hint { color: var(--pcf-gray); }
+.form-error { color: var(--pcf-red); }
+textarea.input { background: var(--pcf-white); }
+
+/* ─── Checkout ─────────────────────────────────────────── */
+.step { color: var(--pcf-gray); }
+.step__num { background: var(--pcf-gray-light); border-color: var(--pcf-gray-light-3); color: var(--pcf-gray-dark-2); }
+.step.is-active { color: var(--pcf-gray-dark); }
+.step.is-active .step__num { background: var(--pcf-green); color: var(--pcf-green-dark); border-color: var(--pcf-green); }
+.step.is-done .step__num { background: var(--pcf-green-2); color: #fff; border-color: var(--pcf-green-2); }
+.step__sep { color: var(--pcf-gray-1); }
+
+/* ─── Toasts ───────────────────────────────────────────── */
+.toast {
+  background: var(--pcf-white);
+  border: 1px solid var(--pcf-gray-light-3);
+  border-left-width: 4px;
+  color: var(--pcf-gray-dark);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ─── Chat ─────────────────────────────────────────────── */
+.chat-fab {
+  background: var(--pcf-green);
+  color: var(--pcf-green-dark);
+  box-shadow: 0 6px 18px rgba(67, 216, 126, .4);
+}
+.chat-panel {
+  background: var(--pcf-white);
+  border: 1px solid var(--pcf-gray-light-3);
+}
+.chat-panel__head { border-bottom-color: var(--pcf-gray-light-3); }
+.chat-panel__avatar { background: var(--pcf-green); color: var(--pcf-green-dark); }
+.chat-panel__foot { border-top-color: var(--pcf-gray-light-3); }
+.chat-msg--bot { background: var(--pcf-gray-light); color: var(--pcf-gray-dark); }
+.chat-msg--me { background: var(--pcf-green); color: var(--pcf-green-dark); }
+
+/* ─── Menú móvil ───────────────────────────────────────── */
+.menu-cat { color: var(--pcf-gray-dark); border-bottom-color: var(--pcf-gray-light-2); }
+.menu-cat:hover { color: var(--pcf-green-2); }
+.menu-cat__count { background: var(--pcf-gray-light); color: var(--pcf-gray-dark-2); }
+
+/* ─── Footer ───────────────────────────────────────────── */
+.footer {
+  background: var(--pcf-gray-dark);
+  border-top: none;
+  color: var(--pcf-gray-light-3);
+}
+.footer__title { color: var(--pcf-white); }
+.footer__link { color: var(--pcf-gray-light-3); }
+.footer__link:hover { color: var(--pcf-green); }
+.footer__contact { color: var(--pcf-gray-light-3); }
+.footer__contact strong { color: var(--pcf-white); }
+.footer__bottom {
+  border-top-color: rgba(255, 255, 255, .12);
+  color: var(--pcf-gray-1);
+}
+.trust-badge {
+  background: rgba(255, 255, 255, .08);
+  border-color: rgba(255, 255, 255, .14);
+  color: var(--pcf-gray-light-3);
+}
+
+/* ─── Utilidades del tema ──────────────────────────────── */
+.pcf-price-black { color: var(--pcf-black); font-weight: 800; }
+.pcf-price-gray  { color: var(--pcf-gray); }
+.pcf-orange      { color: var(--pcf-orange); }
+.pcf-green       { color: var(--pcf-green-dark-2); }
+
+/* ============================================================
+   BARRA DE NAVEGACIÓN OSCURA — el rasgo más distintivo
+   ============================================================
+   En pcfactory.cl el cuerpo es BLANCO pero la barra de navegación
+   principal es OSCURA con texto blanco (color: var(--white)) y se
+   vuelve negra translúcida al hacer scroll:
+       #main-menu { background-color: var(--black-dark); }
+       #main-menu.scrolled-state { background-color: rgb(0 0 0 / 85%); }
+   Ese contraste es lo que hace reconocible el sitio. Sin él, se ve
+   como una tienda genérica.
+   ============================================================ */
+
+:root {
+  --pcf-nav-bg:      #2e3538;   /* gris muy oscuro, no negro puro */
+  --pcf-nav-bg-2:    #1e1e1e;
+  --pcf-nav-scrolled: rgba(0, 0, 0, .85);
+}
+
+/* Barra de anuncios: oscura con texto blanco */
+.topbar {
+  background: var(--pcf-nav-bg-2);
+  color: var(--pcf-white);
+}
+.topbar__link { color: var(--pcf-white); opacity: .8; }
+.topbar__link:hover { opacity: 1; }
+
+/* Navegación principal: oscura, texto blanco */
+.navbar {
+  background: var(--pcf-nav-bg);
+  border-bottom: none;
+  transition: background var(--transition), backdrop-filter var(--transition);
+}
+.navbar.is-scrolled {
+  background: var(--pcf-nav-scrolled);
+  backdrop-filter: blur(4px);
+}
+.navbar__list { padding-top: var(--sp-2); padding-bottom: var(--sp-2); }
+
+.navbar__link {
+  color: var(--pcf-white);
+  border-radius: 0;
+  font-weight: 500;
+  border-bottom: 3px solid transparent;
+}
+.navbar__link:hover {
+  background: rgba(255, 255, 255, .10);
+  color: var(--pcf-white);
+}
+.navbar__link.is-active {
+  background: transparent;
+  color: var(--pcf-green);
+  border-bottom: 3px solid var(--pcf-green);
+  font-weight: 700;
+}
+
+/* ─── Correcciones de contraste sobre fondo claro ──────── */
+/* El spinner era blanco sobre blanco → invisible */
+.spinner {
+  border-color: rgba(66, 71, 74, .22);
+  border-top-color: currentColor;
+}
+
+/* Iconos de beneficio: verde suave en lugar de verde translúcido */
+.feature__icon {
+  background: var(--pcf-green-light);
+  color: var(--pcf-green-dark-2);
+}
+
+/* El botón primario usaba #05261b hardcodeado (verde muy oscuro);
+   en el tema claro se mantiene legible, pero lo hacemos explícito */
+.btn--primary { color: var(--pcf-green-dark); }
+.chat-fab     { color: var(--pcf-green-dark); }
+.badge        { color: var(--pcf-green-dark); }
+
+/* Marca de agua del sello de descuento: naranja de oferta */
+.flag--discount, .flag--sale { background: var(--pcf-orange); color: #fff; }
+
+/* Cuotas en carrito: azul de marca sobre azul claro */
+.cart-installment { background: var(--pcf-blue-light); border-color: var(--pcf-blue-light-2); }
+.cart-installment strong { color: var(--pcf-blue); }

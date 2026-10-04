@@ -1,0 +1,313 @@
+{
+  "base": "http://localhost:3000",
+  "date": "2026-10-03T05:31:42.211Z",
+  "pass": 61,
+  "fail": 0,
+  "results": [
+    {
+      "name": "GET /health → 200",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "health trae status:ok",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "GET /api/system/info → 200",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "GET /products → 200",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "products[] no vacío",
+      "ok": true,
+      "detail": "len=12"
+    },
+    {
+      "name": "producto tiene price numérico",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "producto tiene stockStatus",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "paginación presente",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "filtro limit/page funciona",
+      "ok": true,
+      "detail": "len=3"
+    },
+    {
+      "name": "búsqueda devuelve resultados",
+      "ok": true,
+      "detail": "len=1"
+    },
+    {
+      "name": "orden price-asc correcto",
+      "ok": true,
+      "detail": "[39.99,59.99,79.99,89.99,129.99,199.99,249.99,49990,54990,59990,59990,119990]"
+    },
+    {
+      "name": "filtro de precio funciona",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "GET /products/featured → 200",
+      "ok": true,
+      "detail": "status=200 {\"products\":[{\"id\":12,\"sku\":\"PSU-850W-GOLD\",\"name\":\"Corsair RM850x 850W 80+ Gold Full Modular\",\"slug\":\"corsair-rm850x-85"
+    },
+    {
+      "name": "GET /products/new → 200",
+      "ok": true,
+      "detail": "status=200 {\"products\":[{\"id\":9,\"sku\":\"GPU-RTX4070S-12G\",\"name\":\"NVIDIA GeForce RTX 4070 Super 12GB\",\"slug\":\"nvidia-geforce-rtx-407"
+    },
+    {
+      "name": "GET /products/1 → 200",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "detalle trae imágenes[]",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "GET /products/999999 → 404",
+      "ok": true,
+      "detail": "status=404"
+    },
+    {
+      "name": "GET /products/abc → 400/404 (no 500)",
+      "ok": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "GET por slug → 200/404",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "GET /categories → 200",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "categories[] no vacío",
+      "ok": true,
+      "detail": "len=8"
+    },
+    {
+      "name": "categoría tiene product_count",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "GET /categories/slug/componentes-pc → 200",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "GET /products/category/componentes-pc → 200",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "GET /cart → 200",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "POST /cart/items como invitado → 200/201",
+      "ok": true,
+      "detail": "status=201 {\"message\":\"Item agregado al carrito\",\"cart\":{\"id\":115,\"sessionId\":\"session-1791005501154-qu4f6hwgx\",\"items\":[{\"productId\":9,\"variantId\":null,\"quantit"
+    },
+    {
+      "name": "GET /cart/summary → 200",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "qty negativa rechazada (400)",
+      "ok": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "qty > stock acotada o rechazada",
+      "ok": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "producto inexistente en carrito → 404",
+      "ok": true,
+      "detail": "status=404"
+    },
+    {
+      "name": "login admin → 200",
+      "ok": true,
+      "detail": "status=200 {\"message\":\"Login exitoso\",\"user\":{\"id\":1,\"email\":\"admin@tecnogamer.local\",\"name\":\"Admin\",\"role\":\"admin\",\"avatarUrl\":null,\"phone\":null},\"accessToken\":"
+    },
+    {
+      "name": "login devuelve token",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "login con clave mala → 401",
+      "ok": true,
+      "detail": "status=401"
+    },
+    {
+      "name": "login usuario inexistente → 401",
+      "ok": true,
+      "detail": "status=401"
+    },
+    {
+      "name": "GET /auth/me sin token → 401",
+      "ok": true,
+      "detail": "status=401"
+    },
+    {
+      "name": "GET /auth/me token inválido → 401",
+      "ok": true,
+      "detail": "status=401"
+    },
+    {
+      "name": "GET /auth/me con token → 200",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "usuario tiene role admin",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "admin sin token → 401",
+      "ok": true,
+      "detail": "status=401"
+    },
+    {
+      "name": "crear producto sin token → 401",
+      "ok": true,
+      "detail": "status=401"
+    },
+    {
+      "name": "borrar producto sin token → 401",
+      "ok": true,
+      "detail": "status=401"
+    },
+    {
+      "name": "listar usuarios sin token → 401",
+      "ok": true,
+      "detail": "status=401"
+    },
+    {
+      "name": "admin dashboard con token admin → 200",
+      "ok": true,
+      "detail": "status=200 {\"dashboard\":{\"period\":{\"today\":{\"orders\":0,\"revenue\":0},\"month\":{\"orders\":0,\"revenue\":0},\"year\":{\"orders\":0,\"revenue\":0}},\"ordersByDay\":[],\"pendingOr"
+    },
+    {
+      "name": "admin users con token admin → 200",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "SQLi en search no rompe (200/400)",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "limit gigante acotado o rechazado",
+      "ok": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "page negativa no da 500",
+      "ok": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "XSS en login no rompe",
+      "ok": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "productId malformado → 400",
+      "ok": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "body no-JSON → 400",
+      "ok": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "X-Content-Type-Options: nosniff",
+      "ok": true,
+      "detail": "nosniff"
+    },
+    {
+      "name": "X-Frame-Options presente",
+      "ok": true,
+      "detail": "SAMEORIGIN"
+    },
+    {
+      "name": "Content-Security-Policy presente",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Strict-Transport-Security presente",
+      "ok": true,
+      "detail": "max-age=31536000; includeSubDomains; preload"
+    },
+    {
+      "name": "X-Powered-By oculto",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Referrer-Policy presente",
+      "ok": true,
+      "detail": "no-referrer"
+    },
+    {
+      "name": "404 no filtra stack trace",
+      "ok": true,
+      "detail": "{\"error\":\"Producto no encontrado\",\"code\":\"PRODUCT_NOT_FOUND\"}"
+    },
+    {
+      "name": "ruta API inexistente → 404 JSON",
+      "ok": true,
+      "detail": "status=404"
+    },
+    {
+      "name": "ruta web desconocida → SPA (200 HTML)",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "401 no revela estructura interna",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "rate limit activo en login (429)",
+      "ok": true,
+      "detail": "codes=401,429"
+    }
+  ]
+}

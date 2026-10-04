@@ -1,0 +1,38 @@
+{
+  "name": "ecommerce-fullstack",
+  "version": "1.0.0",
+  "description": "Plataforma E-Commerce Completa — Multi-plataforma, IA, Chat, Seguridad Maxima",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js",
+    "build:frontend": "cd frontend && node build.js",
+    "db:seed": "node backend/scripts/seed.js",
+    "tools:inventory": "node tools/inventory-manager.js",
+    "tools:ai-descriptions": "node tools/ai-product-descriptions.js",
+    "tools:security-audit": "node tools/security-audit.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.0.0",
+    "compression": "^1.8.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.3",
+    "express-rate-limit": "^7.5.1",
+    "express-validator": "^7.3.2",
+    "helmet": "^7.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.12.1",
+    "multer": "^1.4.5-lts.1",
+    "nist-password-validator": "^2.1.0",
+    "sharp": "^0.33.5",
+    "stripe": "^16.0.0",
+    "uuid": "^9.0.1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

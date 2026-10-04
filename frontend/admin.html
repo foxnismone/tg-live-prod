@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1120">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Panel de Operador — TecnoGamer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+  <link rel="stylesheet" href="/assets/css/theme-pcf.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+</head>
+<body class="admin">
+  <a href="#admin-main" class="skip-link">Saltar al contenido</a>
+
+  <!-- ─── Login (pantalla completa si no hay sesión) ──────── -->
+  <div class="login-screen" id="login-screen">
+    <form class="login-card" id="login-form" novalidate>
+      <div class="login-card__logo" aria-hidden="true">🎮</div>
+      <h1 class="login-card__title">Panel de Operador</h1>
+      <p class="login-card__sub">TecnoGamer — gestión de tienda</p>
+
+      <div class="form-field">
+        <label class="form-label" for="email">Email</label>
+        <input class="input" id="email" type="email" required autocomplete="username"
+               placeholder="admin@tecnogamer.local" autofocus>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="password">Contraseña</label>
+        <input class="input" id="password" type="password" required autocomplete="current-password"
+               placeholder="••••••••">
+      </div>
+
+      <div class="login-error" id="login-error" role="alert" hidden></div>
+
+      <button class="btn btn--primary btn--block btn--lg" id="btn-login" type="submit">
+        Iniciar sesión
+      </button>
+      <p class="login-card__hint">
+        🔒 Conexión cifrada · Sesión con token JWT
+      </p>
+    </form>
+  </div>
+
+  <!-- ─── Aplicación ─────────────────────────────────────── -->
+  <div class="admin-app" id="admin-app" hidden>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__head">
+        <span class="sidebar__logo" aria-hidden="true">🎮</span>
+        <div>
+          <div class="sidebar__brand">TecnoGamer</div>
+          <div class="sidebar__role">Panel de operador</div>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav" aria-label="Secciones del panel">
+        <button class="nav-item is-active" data-view="dashboard">
+          <span aria-hidden="true">📊</span> Resumen
+        </button>
+        <button class="nav-item" data-view="products">
+          <span aria-hidden="true">📦</span> Productos
+        </button>
+        <button class="nav-item" data-view="new-product">
+          <span aria-hidden="true">➕</span> Nuevo producto
+        </button>
+        <button class="nav-item" data-view="inventory">
+          <span aria-hidden="true">📋</span> Inventario
+        </button>
+        <button class="nav-item" data-view="orders">
+          <span aria-hidden="true">🧾</span> Pedidos
+        </button>
+        <button class="nav-item" data-view="chat">
+          <span aria-hidden="true">💬</span> Chat de ventas
+        </button>
+        <button class="nav-item" data-view="settings">
+          <span aria-hidden="true">⚙️</span> Configuración
+        </button>
+      </nav>
+
+      <div class="sidebar__foot">
+        <div class="sidebar__user" id="sidebar-user">—</div>
+        <button class="btn btn--ghost btn--sm btn--block" id="btn-logout">Cerrar sesión</button>
+        <a class="btn btn--ghost btn--sm btn--block" href="/" target="_blank" rel="noopener">Ver tienda ↗</a>
+      </div>
+    </aside>
+
+    <!-- Contenido -->
+    <div class="admin-main" id="admin-main">
+      <header class="admin-topbar">
+        <button class="icon-btn" id="btn-menu" aria-label="Abrir menú">☰</button>
+        <h1 class="admin-topbar__title" id="view-title">Resumen</h1>
+        <div class="admin-topbar__actions">
+          <span class="pill" id="env-pill">—</span>
+        </div>
+      </header>
+
+      <div class="admin-content" id="admin-content">
+        <div class="state"><div class="spinner" style="margin:0 auto"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Modal ─────────────────────────────────────────── -->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal__head">
+        <h2 id="modal-title">Detalle</h2>
+        <button class="icon-btn" id="modal-close" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal__body" id="modal-body"></div>
+      <div class="modal__foot" id="modal-foot"></div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/admin.js"></script>
+</body>
+</html>

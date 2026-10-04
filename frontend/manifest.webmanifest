@@ -1,0 +1,36 @@
+{
+  "name": "TecnoGamer — Hardware, Gaming y Tecnología",
+  "short_name": "TecnoGamer",
+  "description": "Tienda online de componentes PC, consolas, videojuegos y accesorios gamer. Envío rápido y pago 100% seguro.",
+  "lang": "es",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b1120",
+  "theme_color": "#0b1120",
+  "categories": ["shopping", "electronics", "games"],
+  "icons": [
+    {
+      "src": "/assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Catálogo",
+      "short_name": "Catálogo",
+      "description": "Ver todos los productos",
+      "url": "/#catalogo"
+    },
+    {
+      "name": "Mi carrito",
+      "short_name": "Carrito",
+      "description": "Revisar el carrito de compras",
+      "url": "/?cart=1"
+    }
+  ]
+}

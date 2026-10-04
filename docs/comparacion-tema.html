@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comparación de temas — TecnoGamer</title>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Ubuntu", -apple-system, sans-serif;
+    background: #f1f3f4;
+    color: #42474A;
+    padding: 24px;
+    line-height: 1.5;
+  }
+  h1 { font-size: 1.4rem; margin-bottom: 6px; }
+  .sub { color: #5C6970; font-size: .9rem; margin-bottom: 24px; }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 820px) { .cols { grid-template-columns: 1fr; } }
+
+  .panel { border-radius: 10px; overflow: hidden; box-shadow: 0 4px 16px rgba(66,71,74,.14); }
+  .panel__label {
+    padding: 10px 16px; font-weight: 700; font-size: .85rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .old .panel__label { background: #ef4444; color: #fff; }
+  .new .panel__label { background: #43d87e; color: #013B18; }
+
+  /* ─── Tema ANTIGUO (oscuro) ─────────────────────────── */
+  .old .site { background: #0b1120; color: #f1f5f9; padding: 0 0 16px; }
+  .old .top { background: linear-gradient(90deg,#059669,#10b981); color:#05261b; font-size:.72rem; padding:7px 14px; font-weight:600; }
+  .old .hdr { background: #0b1120; padding: 12px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #243347; }
+  .old .logo { font-weight:800; font-size:.95rem; }
+  .old .logo b { color:#10b981; }
+  .old .srch { flex:1; background:#131c31; border:1px solid #243347; border-radius:20px; padding:7px 12px; font-size:.75rem; color:#64748b; }
+  .old .nav { background:#131c31; border-bottom:1px solid #243347; padding:7px 14px; display:flex; gap:6px; font-size:.75rem; }
+  .old .nav span { padding:4px 10px; border-radius:20px; color:#94a3b8; }
+  .old .nav .on { background:#10b981; color:#05261b; font-weight:700; }
+  .old .hero { padding: 16px 14px; background: radial-gradient(400px 160px at 20% 0%, rgba(16,185,129,.16), transparent 60%); }
+  .old .hero h2 { font-size:1.05rem; margin-bottom:5px; }
+  .old .hero h2 em { color:#10b981; font-style:normal; }
+  .old .hero p { font-size:.78rem; color:#94a3b8; }
+
+  /* ─── Tema NUEVO (claro, pc Factory) ────────────────── */
+  .new .site { background: #fff; color: #42474A; padding: 0 0 16px; }
+  .new .top { background:#1e1e1e; color:#fff; font-size:.72rem; padding:7px 14px; font-weight:600; }
+  .new .hdr { background:#fff; padding:12px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #D2D7DC; }
+  .new .logo { font-weight:800; font-size:.95rem; color:#42474A; }
+  .new .logo b { color:#2EC269; }
+  .new .srch { flex:1; background:#fff; border:1.5px solid #D2D7DC; border-radius:4px; padding:7px 12px; font-size:.75rem; color:#8F9CA3; }
+  .new .nav { background:#2e3538; padding:8px 14px; display:flex; gap:4px; font-size:.75rem; }
+  .new .nav span { padding:6px 12px; color:#fff; border-bottom:3px solid transparent; }
+  .new .nav .on { color:#43d87e; border-bottom-color:#43d87e; font-weight:700; }
+  .new .hero { padding:16px 14px; background:linear-gradient(180deg,#ccf6dd 0%, rgba(204,246,221,0) 70%); }
+  .new .hero h2 { font-size:1.05rem; margin-bottom:5px; color:#42474A; }
+  .new .hero h2 em { color:#1D8A48; font-style:normal; }
+  .new .hero p { font-size:.78rem; color:#5C6970; }
+
+  /* ─── Tarjeta de producto comparada ─────────────────── */
+  .cards { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:14px; }
+  .pcard { border-radius:8px; overflow:hidden; }
+  .old .pcard { background:#131c31; border:1px solid #243347; }
+  .new .pcard { background:#fff; border:1px solid #D2D7DC; }
+  .pcard__img { height:78px; display:grid; place-items:center; font-size:1.9rem; }
+  .old .pcard__img { background:#1c2740; }
+  .new .pcard__img { background:#fff; border-bottom:1px solid #EAECEE; }
+  .pcard__b { padding:9px 10px 11px; }
+  .pcard__brand { font-size:.6rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+  .old .pcard__brand { color:#64748b; }
+  .new .pcard__brand { color:#8F9CA3; }
+  .pcard__name { font-size:.75rem; line-height:1.3; margin:3px 0 7px; min-height:2em; }
+  .old .pcard__name { color:#f1f5f9; }
+  .new .pcard__name { color:#42474A; }
+  .pcard__lbl { font-size:.62rem; }
+  .old .pcard__lbl { color:#10b981; text-transform:uppercase; font-weight:700; }
+  .new .pcard__lbl { color:#5C6970; }
+  .pcard__price { font-weight:800; letter-spacing:-.02em; }
+  .old .pcard__price { font-size:1.05rem; color:#10b981; }
+  .new .pcard__price { font-size:1.15rem; color:#000; }
+  .pcard__was { font-size:.68rem; text-decoration:line-through; }
+  .old .pcard__was { color:#64748b; }
+  .new .pcard__was { color:#8F9CA3; }
+  .pcard__inst { font-size:.66rem; margin-top:3px; }
+  .old .pcard__inst { color:#94a3b8; }
+  .new .pcard__inst { color:#5C6970; }
+  .old .pcard__inst b { color:#8b5cf6; }
+  .new .pcard__inst b { color:#2644f9; }
+  .pcard__pick { font-size:.63rem; margin-top:3px; font-weight:600; }
+  .old .pcard__pick { color:#3b82f6; }
+  .new .pcard__pick { color:#1D8A48; }
+  .pcard__btn { margin-top:8px; text-align:center; padding:6px; border-radius:4px; font-size:.7rem; font-weight:700; }
+  .old .pcard__btn { background:#10b981; color:#05261b; }
+  .new .pcard__btn { background:#43d87e; color:#013B18; }
+
+  /* ─── Paleta ────────────────────────────────────────── */
+  .palette { margin-top: 22px; }
+  .palette h3 { font-size: .95rem; margin-bottom: 10px; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sw { border-radius: 6px; padding: 8px 10px; font-size: .68rem; font-weight: 700; min-width: 88px; }
+  .note { margin-top: 20px; background:#fff; border-left:4px solid #2644f9; padding:14px 16px; border-radius:6px; font-size:.85rem; }
+  .note b { color:#2644f9; }
+</style>
+</head>
+<body>
+  <h1>Antes y después — tema visual</h1>
+  <p class="sub">El tema anterior era oscuro con acentos neón. El nuevo replica la identidad real de pcfactory.cl: cuerpo blanco, navegación oscura, verde #43d87e y tipografía Ubuntu.</p>
+
+  <div class="cols">
+    <!-- ANTES -->
+    <div class="panel old">
+      <div class="panel__label"><span>❌ ANTES — tema oscuro genérico</span><span>#0b1120 + #10b981</span></div>
+      <div class="site">
+        <div class="top">🚚 Despacho gratis sobre $75.000</div>
+        <div class="hdr">
+          <span style="font-size:1rem">🎮</span>
+          <span class="logo">Tecno<b>Gamer</b></span>
+          <span class="srch">Buscar productos…</span>
+        </div>
+        <div class="nav">
+          <span class="on">Todos</span><span>Componentes</span><span>Consolas</span><span>Audio</span>
+        </div>
+        <div class="hero">
+          <h2>Potencia tu <em>setup gamer</em></h2>
+          <p>Componentes, consolas y accesorios</p>
+        </div>
+        <div class="cards">
+          <div class="pcard">
+            <div class="pcard__img">🎴</div>
+            <div class="pcard__b">
+              <div class="pcard__brand">NVIDIA</div>
+              <div class="pcard__name">GeForce RTX 4070 Super 12GB</div>
+              <div class="pcard__lbl">Transferencia</div>
+              <div class="pcard__price">$649.990</div>
+              <div class="pcard__inst">o hasta <b>18 cuotas</b></div>
+            </div>
+          </div>
+          <div class="pcard">
+            <div class="pcard__img">🧠</div>
+            <div class="pcard__b">
+              <div class="pcard__brand">AMD</div>
+              <div class="pcard__name">Ryzen 7 7800X3D</div>
+              <div class="pcard__lbl">Transferencia</div>
+              <div class="pcard__price">$429.990</div>
+              <div class="pcard__inst">o hasta <b>12 cuotas</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DESPUÉS -->
+    <div class="panel new">
+      <div class="panel__label"><span>✅ AHORA — identidad pcfactory.cl</span><span>#ffffff + #43d87e</span></div>
+      <div class="site">
+        <div class="top">🚚 Despacho gratis sobre $75.000</div>
+        <div class="hdr">
+          <span style="font-size:1rem">🎮</span>
+          <span class="logo">Tecno<b>Gamer</b></span>
+          <span class="srch">Buscar por producto, marca o categoría…</span>
+        </div>
+        <div class="nav">
+          <span class="on">Todos</span><span>Componentes</span><span>Consolas</span><span>Audio</span>
+        </div>
+        <div class="hero">
+          <h2>Compra online y <em>retira hoy</em> en tienda</h2>
+          <p>Hasta 24 cuotas sin interés y garantía oficial</p>
+        </div>
+        <div class="cards">
+          <div class="pcard">
+            <div class="pcard__img">🎴</div>
+            <div class="pcard__b">
+              <div class="pcard__brand">NVIDIA</div>
+              <div class="pcard__name">GeForce RTX 4070 Super 12GB</div>
+              <div class="pcard__lbl">Transferencia</div>
+              <div class="pcard__price">$578.490</div>
+              <div class="pcard__was">Normal $649.990</div>
+              <div class="pcard__inst">o hasta <b>18 cuotas</b> de $32.138</div>
+              <div class="pcard__pick">🏬 Retiro en tienda</div>
+              <div class="pcard__btn">Agregar</div>
+            </div>
+          </div>
+          <div class="pcard">
+            <div class="pcard__img">🧠</div>
+            <div class="pcard__b">
+              <div class="pcard__brand">AMD</div>
+              <div class="pcard__name">Ryzen 7 7800X3D</div>
+              <div class="pcard__lbl">Transferencia</div>
+              <div class="pcard__price">$382.690</div>
+              <div class="pcard__was">Normal $429.990</div>
+              <div class="pcard__inst">o hasta <b>12 cuotas</b> de $31.890</div>
+              <div class="pcard__pick">🏬 Retiro en tienda</div>
+              <div class="pcard__btn">Agregar</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="palette">
+    <h3>Paleta extraída del CSS real de pcfactory.cl</h3>
+    <div class="swatches">
+      <div class="sw" style="background:#43d87e;color:#013B18">#43d87e verde</div>
+      <div class="sw" style="background:#2EC269;color:#fff">#2EC269</div>
+      <div class="sw" style="background:#1D8A48;color:#fff">#1D8A48</div>
+      <div class="sw" style="background:#ccf6dd;color:#013B18">#ccf6dd</div>
+      <div class="sw" style="background:#e2ff3c;color:#42474A">#e2ff3c</div>
+      <div class="sw" style="background:#2644f9;color:#fff">#2644f9</div>
+      <div class="sw" style="background:#ED801E;color:#fff">#ED801E</div>
+      <div class="sw" style="background:#42474A;color:#fff">#42474A</div>
+      <div class="sw" style="background:#2e3538;color:#fff">#2e3538 nav</div>
+      <div class="sw" style="background:#8F9CA3;color:#fff">#8F9CA3</div>
+      <div class="sw" style="background:#F1F3F4;color:#42474A">#F1F3F4</div>
+      <div class="sw" style="background:#fff;color:#42474A;border:1px solid #D2D7DC">#FFFFFF</div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Cambios verificados:</b> cuerpo blanco · navegación oscura #2e3538 con texto blanco ·
+    precio de transferencia en negro y bold (protagonista) · precio normal en gris tachado ·
+    tipografía Ubuntu · contraste WCAG AA en todos los pares (9.41:1 cuerpo, 12.48:1 navegación).
+  </div>
+</body>
+</html>

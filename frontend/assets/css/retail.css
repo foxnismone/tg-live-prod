@@ -1,0 +1,359 @@
+/* ============================================================
+   TECNOGAMER — Componentes inspirados en retail tecnológico chileno
+   ============================================================
+   Extiende main.css con los patrones de pc Factory:
+   · Barra de anuncios rotativa
+   · Tarjeta de producto con doble precio (transferencia / crédito)
+   · Cuotas sin interés visibles en la tarjeta
+   · Retiro en tienda y stock por sucursal
+   · Gamer Zone como sección diferenciada
+   · Grilla de categorías y medios de pago
+   ============================================================ */
+
+/* ─── Barra de anuncios ────────────────────────────────── */
+.topbar {
+  background: linear-gradient(90deg, var(--brand-dark), var(--brand));
+  color: #05261b;
+  font-size: .82rem;
+  font-weight: 600;
+}
+.topbar__inner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--sp-4); min-height: 36px;
+}
+.topbar__msgs { position: relative; flex: 1; height: 20px; overflow: hidden; }
+.topbar__msg {
+  position: absolute; inset: 0;
+  display: flex; align-items: center;
+  opacity: 0; transform: translateY(6px);
+  transition: opacity 400ms ease, transform 400ms ease;
+  white-space: nowrap;
+}
+.topbar__msg.is-active { opacity: 1; transform: none; }
+.topbar__links { display: flex; gap: var(--sp-4); flex-shrink: 0; }
+.topbar__link { color: #05261b; opacity: .85; transition: opacity var(--transition); }
+.topbar__link:hover { opacity: 1; text-decoration: underline; }
+
+/* ─── Header extendido ─────────────────────────────────── */
+.header__burger { display: none; }
+
+.header__promo {
+  display: flex; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  font-size: .74rem; line-height: 1.15;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  transition: all var(--transition);
+}
+.header__promo:hover { border-color: var(--brand); color: var(--brand); }
+.header__promo strong { color: var(--text-primary); }
+.header__promo:hover strong { color: var(--brand); }
+.header__promo > span:first-child { font-size: 1.1rem; }
+
+.icon-btn--labeled {
+  width: auto; padding: 0 var(--sp-3);
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  height: 46px;
+}
+.icon-btn__label { font-size: .68rem; font-weight: 600; }
+
+/* ─── Hero ─────────────────────────────────────────────── */
+.hero__main { max-width: 62ch; }
+.hero__aside { display: flex; }
+
+.benefit-card {
+  width: 100%;
+  background: linear-gradient(160deg, var(--bg-elevated), var(--bg-surface));
+  border: 1px solid var(--border-light);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+  box-shadow: var(--shadow-lg);
+  display: grid; gap: var(--sp-4);
+  align-content: center;
+}
+.benefit { display: flex; gap: var(--sp-3); align-items: flex-start; }
+.benefit__icon {
+  width: 40px; height: 40px; border-radius: var(--r-md);
+  background: rgba(16,185,129,.12); color: var(--brand);
+  display: grid; place-items: center; flex-shrink: 0; font-size: 1.15rem;
+}
+.benefit__title { font-weight: 700; font-size: .92rem; }
+.benefit__desc { font-size: .8rem; color: var(--text-secondary); line-height: 1.4; }
+
+/* ─── Grilla de categorías ─────────────────────────────── */
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--sp-3);
+}
+.cat-card {
+  display: flex; flex-direction: column; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-5) var(--sp-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  text-align: center;
+  transition: all var(--transition);
+}
+.cat-card:hover {
+  border-color: var(--brand);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+.cat-card__icon {
+  width: 52px; height: 52px; border-radius: var(--r-md);
+  background: var(--bg-elevated);
+  display: grid; place-items: center; font-size: 1.6rem;
+  transition: background var(--transition);
+}
+.cat-card:hover .cat-card__icon { background: rgba(16,185,129,.14); }
+.cat-card__name { font-weight: 600; font-size: .88rem; line-height: 1.25; }
+.cat-card__count { font-size: .74rem; color: var(--text-muted); }
+
+.skeleton--cat { height: 150px; }
+
+/* ─── Tarjeta de producto (patrón retail) ──────────────── */
+.product-card__body { gap: var(--sp-2); }
+
+.product-card__brand {
+  font-size: .7rem; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--text-muted);
+}
+
+/* Precio con transferencia: gancho principal */
+.price-block { display: grid; gap: 2px; margin-top: auto; }
+.price-cash {
+  display: flex; align-items: baseline; gap: var(--sp-2);
+}
+.price-cash__label {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--brand);
+}
+.price-cash__value { font-size: 1.3rem; font-weight: 800; color: var(--brand); letter-spacing: -.02em; }
+
+/* Precio normal (crédito) tachado o secundario */
+.price-normal {
+  font-size: .78rem; color: var(--text-muted);
+}
+.price-normal__value { text-decoration: line-through; }
+
+/* Cuotas */
+.installments {
+  display: inline-flex; align-items: center; gap: var(--sp-1);
+  font-size: .76rem; color: var(--text-secondary);
+}
+.installments strong { color: var(--accent); font-weight: 700; }
+
+/* Sello de retiro en tienda */
+.pickup-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: .7rem; font-weight: 600;
+  color: var(--info);
+}
+.pickup-badge::before { content: "🏬"; font-size: .8rem; }
+
+/* Descuento como sello prominente */
+.flag--discount {
+  background: var(--danger); color: #fff;
+  font-size: .72rem; padding: 4px 9px;
+  box-shadow: 0 2px 8px rgba(239,68,68,.4);
+}
+
+/* ─── Gamer Zone ───────────────────────────────────────── */
+.gamerzone {
+  position: relative;
+  padding: var(--sp-7) 0;
+  margin: var(--sp-6) 0;
+  background:
+    radial-gradient(900px 350px at 15% 0%, rgba(139,92,246,.16), transparent 60%),
+    radial-gradient(700px 350px at 85% 100%, rgba(16,185,129,.12), transparent 60%),
+    var(--bg-surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.gamerzone__head { max-width: 60ch; margin-bottom: var(--sp-5); }
+.gamerzone__eyebrow {
+  display: inline-block;
+  font-size: .74rem; font-weight: 800; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--accent);
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid rgba(139,92,246,.35);
+  background: rgba(139,92,246,.1);
+  border-radius: var(--r-full);
+  margin-bottom: var(--sp-3);
+}
+.gamerzone__title { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 800; letter-spacing: -.02em; margin-bottom: var(--sp-2); }
+.gamerzone__text { color: var(--text-secondary); }
+
+/* ─── Tiendas ──────────────────────────────────────────── */
+.section--alt { background: var(--bg-surface); border-top: 1px solid var(--border); }
+.section--tight { padding: var(--sp-6) 0; }
+
+.stores {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: var(--sp-3);
+}
+.store-card {
+  display: flex; gap: var(--sp-3); align-items: center;
+  padding: var(--sp-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  transition: border-color var(--transition);
+}
+.store-card:hover { border-color: var(--brand); }
+.store-card__icon {
+  width: 38px; height: 38px; border-radius: var(--r-sm);
+  background: rgba(16,185,129,.12); color: var(--brand);
+  display: grid; place-items: center; font-size: 1.1rem; flex-shrink: 0;
+}
+.store-card__name { font-weight: 600; font-size: .9rem; }
+.store-card__meta { font-size: .76rem; color: var(--text-muted); }
+
+.stores__note {
+  margin-top: var(--sp-5);
+  font-size: .82rem; color: var(--text-muted);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-elevated);
+  border-left: 3px solid var(--info);
+  border-radius: var(--r-sm);
+  line-height: 1.5;
+}
+
+/* ─── Medios de pago ───────────────────────────────────── */
+.payments {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--sp-3);
+}
+.payment-card {
+  padding: var(--sp-5) var(--sp-4);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  text-align: center;
+  transition: all var(--transition);
+}
+.payment-card:hover { border-color: var(--border-light); transform: translateY(-2px); }
+.payment-card__icon { font-size: 1.8rem; display: block; margin-bottom: var(--sp-3); }
+.payment-card__title { font-weight: 700; font-size: .92rem; margin-bottom: var(--sp-1); }
+.payment-card__desc { font-size: .78rem; color: var(--text-secondary); line-height: 1.4; }
+
+/* ─── Cuotas en el carrito ─────────────────────────────── */
+.cart-installment {
+  margin-top: var(--sp-3);
+  padding: var(--sp-3);
+  background: rgba(139,92,246,.08);
+  border: 1px solid rgba(139,92,246,.25);
+  border-radius: var(--r-md);
+  font-size: .82rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+.cart-installment strong { color: var(--accent); }
+
+/* ─── Footer extendido ─────────────────────────────────── */
+.footer__contact {
+  margin-top: var(--sp-4);
+  display: grid; gap: var(--sp-1);
+  font-size: .82rem; color: var(--text-secondary);
+}
+.footer__contact strong { color: var(--text-primary); }
+
+/* ─── Drawer izquierdo (menú móvil) ────────────────────── */
+.drawer--left {
+  right: auto; left: 0;
+  border-left: none; border-right: 1px solid var(--border);
+  transform: translateX(-100%);
+}
+.drawer--left.is-open { transform: none; }
+
+.menu-cat {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-2);
+  border-bottom: 1px solid var(--border);
+  font-size: .92rem;
+  color: var(--text-secondary);
+  transition: color var(--transition);
+  width: 100%; text-align: left;
+}
+.menu-cat:hover { color: var(--brand); }
+.menu-cat__count {
+  font-size: .74rem; color: var(--text-muted);
+  background: var(--bg-elevated);
+  padding: 2px 8px; border-radius: var(--r-full);
+}
+
+/* ─── Detalle de producto enriquecido ──────────────────── */
+.pd__prices {
+  display: grid; gap: var(--sp-2);
+  padding: var(--sp-4);
+  background: var(--bg-elevated);
+  border-radius: var(--r-md);
+  margin: var(--sp-3) 0;
+}
+.pd__price-row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3);
+}
+.pd__price-key { font-size: .82rem; color: var(--text-secondary); }
+.pd__price-val { font-weight: 700; }
+.pd__price-val--cash { font-size: 1.5rem; font-weight: 800; color: var(--brand); }
+.pd__price-val--credit { font-size: .95rem; }
+.pd__installments {
+  padding-top: var(--sp-3); border-top: 1px solid var(--border);
+  font-size: .85rem; color: var(--text-secondary);
+}
+.pd__installments strong { color: var(--accent); }
+
+.pd__stores { margin-top: var(--sp-3); }
+.pd__store-list {
+  display: grid; gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+.pd__store {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .82rem;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--bg-base);
+  border-radius: var(--r-sm);
+}
+.pd__store-qty { color: var(--brand); font-weight: 700; }
+.pd__store-qty--low { color: var(--warning); }
+
+/* ─── Responsive ───────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .hero__grid { grid-template-columns: 1fr; }
+  .hero__aside { max-width: 520px; }
+}
+
+@media (max-width: 900px) {
+  .header__promo { display: none; }
+  .header__burger { display: grid; }
+  .navbar { display: none; }
+  .icon-btn__label { display: none; }
+  .icon-btn--labeled { width: 42px; height: 42px; padding: 0; }
+}
+
+@media (max-width: 768px) {
+  .topbar__links { display: none; }
+  .topbar__msgs { height: 18px; }
+  .topbar { font-size: .76rem; }
+  .cat-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+  .cat-card { padding: var(--sp-3) var(--sp-2); }
+  .cat-card__icon { width: 42px; height: 42px; font-size: 1.3rem; }
+  .stores, .payments { grid-template-columns: 1fr 1fr; }
+  .gamerzone { padding: var(--sp-6) 0; }
+}
+
+@media (max-width: 560px) {
+  .cat-grid { grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
+  .cat-card__name { font-size: .78rem; }
+  .cat-card__count { display: none; }
+  .stores, .payments { grid-template-columns: 1fr; }
+  .price-cash__value { font-size: 1.05rem; }
+  .price-cash__label { font-size: .62rem; }
+  .installments { font-size: .7rem; }
+}

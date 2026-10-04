@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F1F3F4"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#76b900"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fondo -->
+  <rect width="600" height="600" fill="url(#bg)"/>
+
+  <!-- Tarjeta del producto -->
+  <rect x="30" y="30" width="540" height="540" rx="12" fill="url(#card)" opacity="0.08"/>
+  <rect x="30" y="30" width="540" height="540" rx="12" fill="none" stroke="#76b900" stroke-width="2" opacity="0.3"/>
+
+  <!-- Icono del producto -->
+  <text x="300" y="200" font-size="120" text-anchor="middle" dominant-baseline="central">🎴</text>
+
+  <!-- Marca -->
+  <text x="300" y="280" font-size="22" font-weight="700" font-family="Ubuntu, Arial, sans-serif" fill="#76b900" text-anchor="middle">NVIDIA</text>
+
+  <!-- Nombre -->
+  <text x="300" y="310" font-size="18" font-weight="500" font-family="Ubuntu, Arial, sans-serif" fill="#42474A" text-anchor="middle">GeForce RTX 4070 SUPER</text>
+
+  <!-- Línea separadora -->
+  <line x1="80" y1="325" x2="520" y2="325" stroke="#D2D7DC" stroke-width="1"/>
+
+  <!-- Especificaciones -->
+  
+    <text x="40" y="340" font-size="13" font-family="Ubuntu, Arial, sans-serif" fill="#8F9CA3">Núcleos CUDA</text>
+    <text x="560" y="340" font-size="13" font-weight="700" font-family="Ubuntu, Arial, sans-serif" fill="#42474A" text-anchor="end">7168</text>
+  
+    <text x="40" y="362" font-size="13" font-family="Ubuntu, Arial, sans-serif" fill="#8F9CA3">Frecuencia boost</text>
+    <text x="560" y="362" font-size="13" font-weight="700" font-family="Ubuntu, Arial, sans-serif" fill="#42474A" text-anchor="end">2475 MHz</text>
+  
+    <text x="40" y="384" font-size="13" font-family="Ubuntu, Arial, sans-serif" fill="#8F9CA3">Memoria</text>
+    <text x="560" y="384" font-size="13" font-weight="700" font-family="Ubuntu, Arial, sans-serif" fill="#42474A" text-anchor="end">12 GB GDDR6X</text>
+  
+    <text x="40" y="406" font-size="13" font-family="Ubuntu, Arial, sans-serif" fill="#8F9CA3">Interfaz de memoria</text>
+    <text x="560" y="406" font-size="13" font-weight="700" font-family="Ubuntu, Arial, sans-serif" fill="#42474A" text-anchor="end">192-bit</text>
+  
+    <text x="40" y="428" font-size="13" font-family="Ubuntu, Arial, sans-serif" fill="#8F9CA3">Ancho de banda</text>
+    <text x="560" y="428" font-size="13" font-weight="700" font-family="Ubuntu, Arial, sans-serif" fill="#42474A" text-anchor="end">504 GB/s</text>
+  
+
+  <!-- Marca de agua -->
+  <text x="300" y="560" font-size="14" font-weight="700" font-family="Ubuntu, Arial, sans-serif" fill="#BEC5CC" text-anchor="middle">TecnoGamer</text>
+</svg>

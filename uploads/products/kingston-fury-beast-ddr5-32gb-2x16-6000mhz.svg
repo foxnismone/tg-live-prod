@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="#0b1120"/>
+  <rect x="30" y="30" width="540" height="540" rx="28" fill="url(#g)" opacity="0.14"/>
+  <rect x="30" y="30" width="540" height="540" rx="28" fill="none" stroke="#f59e0b" stroke-width="2" opacity="0.35"/>
+  <text x="300" y="300" font-size="200" text-anchor="middle" dominant-baseline="central">⚡</text>
+  <text x="300" y="470" font-size="26" font-family="Inter,sans-serif" font-weight="700"
+        fill="#f1f5f9" text-anchor="middle">Kingston Fury Beast DDR5 32GB (2x16) 6000MHz</text>
+  <text x="300" y="508" font-size="17" font-family="Inter,sans-serif"
+        fill="#94a3b8" text-anchor="middle">TecnoGamer</text>
+</svg>

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1120">
+  <title>TecnoGamer — Tecnología y Gaming | Retiro inmediato en tienda</title>
+  <meta name="description" content="Compra online y retira de inmediato en tienda. Notebooks, componentes, consolas y zona gamer con hasta 24 cuotas sin interés y garantía oficial.">
+
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&family=Signika:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/icon.svg">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="TecnoGamer">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="/assets/css/retail.css">
+  <!-- Font Awesome 7 Free: iconos reales para toda la interfaz -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+        integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="/assets/css/theme-pcf.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'><i class="fa-solid fa-gamepad"></i></text></svg>">
+</head>
+<body>
+  <a href="#main" class="skip-link">Saltar al contenido principal</a>
+
+  <!-- ─── Barra de anuncios rotativa (patrón retail) ─────── -->
+  <div class="topbar">
+    <div class="container topbar__inner">
+      <div class="topbar__msgs" id="topbar-msgs">
+        <span class="topbar__msg is-active"><i class="fa-solid fa-truck-fast"></i> Despacho gratis en compras sobre $75.000</span>
+        <span class="topbar__msg"><i class="fa-solid fa-bolt"></i> Compra online y retira en tienda hoy mismo</span>
+        <span class="topbar__msg"><i class="fa-solid fa-credit-card"></i> Hasta 24 cuotas sin interés con bancos participantes</span>
+        <span class="topbar__msg"><i class="fa-solid fa-shield-halved"></i> Garantía oficial en todos los productos</span>
+      </div>
+      <div class="topbar__links">
+        <a href="#tiendas" class="topbar__link"><i class="fa-solid fa-location-dot"></i> Tiendas</a>
+        <a href="#ayuda" class="topbar__link"><i class="fa-solid fa-headset"></i> Ayuda</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Header ─────────────────────────────────────────── -->
+  <header class="header">
+    <div class="container header__inner">
+      <button class="icon-btn header__burger" id="btn-burger" aria-label="Abrir menú de categorías"><i class="fa-solid fa-bars"></i></button>
+
+      <a href="/" class="logo" aria-label="TecnoGamer — inicio">
+        <span class="logo__mark" aria-hidden="true"><i class="fa-solid fa-gamepad"></i></span>
+        <span class="logo__text">Tecno<span>Gamer</span></span>
+      </a>
+
+      <div class="search">
+        <label for="search-input" class="sr-only">Buscar productos</label>
+        <input
+          id="search-input"
+          class="search__input"
+          type="search"
+          placeholder="Busca por producto, marca o categoría…"
+          autocomplete="off"
+          role="searchbox"
+        >
+        <span class="search__icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
+      </div>
+
+      <div class="header__actions">
+        <a href="#tiendas" class="header__promo" title="Retiro en tienda">
+          <span aria-hidden="true"><i class="fa-solid fa-store"></i></span>
+          <span>Retiro<br><strong>en tienda</strong></span>
+        </a>
+        <button class="icon-btn icon-btn--labeled" id="btn-account" aria-label="Mi cuenta">
+          <span aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+          <span class="icon-btn__label">Cuenta</span>
+        </button>
+        <button class="icon-btn icon-btn--labeled" id="btn-cart" aria-label="Carrito de compras">
+          <span aria-hidden="true"><i class="fa-solid fa-cart-shopping"></i></span>
+          <span class="icon-btn__label">Carrito</span>
+          <span class="badge" id="cart-count" hidden>0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── Navegación de categorías ───────────────────────── -->
+  <nav class="navbar" aria-label="Categorías de productos">
+    <div class="container">
+      <ul class="navbar__list" id="nav-categories">
+        <li><a class="navbar__link is-active" href="#" data-cat="">Todos</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main id="main">
+    <!-- ─── Hero + beneficios ────────────────────────────── -->
+    <section class="hero">
+      <div class="container hero__grid">
+        <div class="hero__main">
+          <span class="hero__eyebrow"><i class="fa-solid fa-fire"></i> Ofertas de la semana</span>
+          <h1 class="hero__title">
+            Compra online y <em>retira hoy</em> en tienda
+          </h1>
+          <p class="hero__text">
+            Notebooks, componentes, consolas y todo para tu setup gamer.
+            Hasta 24 cuotas sin interés y garantía oficial de fábrica.
+          </p>
+          <div class="hero__cta">
+            <a href="#catalogo" class="btn btn--primary btn--lg">Ver ofertas</a>
+            <button class="btn btn--secondary btn--lg" id="btn-chat-hero"><i class="fa-solid fa-comments"></i> Asesórate online</button>
+          </div>
+
+          <div class="hero__stats">
+            <div class="stat">
+              <div class="stat__value" id="stat-products">—</div>
+              <div class="stat__label">Productos en catálogo</div>
+            </div>
+            <div class="stat">
+              <div class="stat__value">8</div>
+              <div class="stat__label">Tiendas en el país</div>
+            </div>
+            <div class="stat">
+              <div class="stat__value">24/7</div>
+              <div class="stat__label">Asesoría por chat</div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="hero__aside">
+          <div class="benefit-card">
+            <div class="benefit">
+              <span class="benefit__icon" aria-hidden="true"><i class="fa-solid fa-store"></i></span>
+              <div>
+                <div class="benefit__title">Retiro inmediato</div>
+                <div class="benefit__desc">Compra online y retira en la tienda que elijas en ~90 minutos.</div>
+              </div>
+            </div>
+            <div class="benefit">
+              <span class="benefit__icon" aria-hidden="true"><i class="fa-solid fa-credit-card"></i></span>
+              <div>
+                <div class="benefit__title">Cuotas sin interés</div>
+                <div class="benefit__desc">Hasta 24 cuotas con tarjetas de bancos participantes.</div>
+              </div>
+            </div>
+            <div class="benefit">
+              <span class="benefit__icon" aria-hidden="true"><i class="fa-solid fa-money-bill-wave"></i></span>
+              <div>
+                <div class="benefit__title">Precio transferencia</div>
+                <div class="benefit__desc">Paga con transferencia o débito y accede al mejor precio.</div>
+              </div>
+            </div>
+            <div class="benefit">
+              <span class="benefit__icon" aria-hidden="true"><i class="fa-solid fa-shield-halved"></i></span>
+              <div>
+                <div class="benefit__title">Garantía oficial</div>
+                <div class="benefit__desc">Respaldo directo de fábrica y servicio técnico autorizado.</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ─── Categorías destacadas ────────────────────────── -->
+    <section class="section section--tight">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="section__title">Explora por categoría</h2>
+        </div>
+        <div class="cat-grid" id="cat-grid">
+          <div class="skeleton skeleton--cat"></div><div class="skeleton skeleton--cat"></div>
+          <div class="skeleton skeleton--cat"></div><div class="skeleton skeleton--cat"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Ofertas destacadas ───────────────────────────── -->
+    <section class="section section--tight" id="ofertas">
+      <div class="container">
+        <div class="section__head">
+          <div>
+            <h2 class="section__title"><i class="fa-solid fa-fire"></i> Ofertas destacadas</h2>
+            <p class="section__subtitle">Precio de transferencia y cuotas sin interés</p>
+          </div>
+          <a href="#catalogo" class="btn btn--ghost btn--sm">Ver todo el catálogo →</a>
+        </div>
+        <div class="product-grid" id="featured-grid">
+          <div class="skeleton"></div><div class="skeleton"></div>
+          <div class="skeleton"></div><div class="skeleton"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Gamer Zone ───────────────────────────────────── -->
+    <section class="gamerzone" id="gamer-zone">
+      <div class="container">
+        <div class="gamerzone__head">
+          <span class="gamerzone__eyebrow"><i class="fa-solid fa-gamepad"></i> Gamer Zone</span>
+          <h2 class="gamerzone__title">Todo para tu setup</h2>
+          <p class="gamerzone__text">
+            Tarjetas gráficas, monitores de alto refresco, periféricos mecánicos y consolas.
+            Arma el equipo que siempre quisiste, en cuotas.
+          </p>
+        </div>
+        <div class="product-grid" id="gamer-grid">
+          <div class="skeleton"></div><div class="skeleton"></div>
+          <div class="skeleton"></div><div class="skeleton"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Catálogo completo ────────────────────────────── -->
+    <section class="section" id="catalogo">
+      <div class="container">
+        <div class="section__head">
+          <div>
+            <h2 class="section__title">Catálogo</h2>
+            <p class="section__subtitle" id="catalog-count">Cargando productos…</p>
+          </div>
+        </div>
+
+        <div class="filters">
+          <div class="field">
+            <label class="field__label" for="filter-sort">Ordenar por</label>
+            <select class="select" id="filter-sort">
+              <option value="newest">Más recientes</option>
+              <option value="price-asc">Menor precio</option>
+              <option value="price-desc">Mayor precio</option>
+              <option value="name-asc">Nombre A–Z</option>
+              <option value="rating-desc">Mejor valorados</option>
+              <option value="sales-desc">Más vendidos</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field__label" for="filter-min">Precio mínimo</label>
+            <input class="input" id="filter-min" type="number" min="0" step="1000" placeholder="$ 0" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label class="field__label" for="filter-max">Precio máximo</label>
+            <input class="input" id="filter-max" type="number" min="0" step="1000" placeholder="$ 2.000.000" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label class="field__label" for="filter-stock">Disponibilidad</label>
+            <select class="select" id="filter-stock">
+              <option value="">Todos</option>
+              <option value="true">Solo con stock</option>
+            </select>
+          </div>
+          <div class="field" style="align-self:flex-end">
+            <button class="btn btn--secondary" id="btn-clear-filters">Limpiar filtros</button>
+          </div>
+        </div>
+
+        <div class="product-grid" id="product-grid" aria-live="polite" aria-busy="true">
+          <div class="skeleton"></div><div class="skeleton"></div>
+          <div class="skeleton"></div><div class="skeleton"></div>
+        </div>
+
+        <div style="text-align:center;margin-top:var(--sp-6)">
+          <button class="btn btn--secondary btn--lg" id="btn-load-more" hidden>Cargar más productos</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Tiendas / retiro ─────────────────────────────── -->
+    <section class="section section--alt" id="tiendas">
+      <div class="container">
+        <div class="section__head">
+          <div>
+            <h2 class="section__title"><i class="fa-solid fa-store"></i> Retiro en tienda</h2>
+            <p class="section__subtitle">Compra online y retira el mismo día, sin costo de despacho</p>
+          </div>
+        </div>
+        <div class="stores" id="stores-grid"></div>
+        <p class="stores__note">
+          ℹ️ El stock por tienda se actualiza cada 10 minutos. El retiro está disponible desde 90 minutos
+          después de confirmado el pago, presentando el documento de compra y cédula de identidad.
+        </p>
+      </div>
+    </section>
+
+    <!-- ─── Medios de pago ───────────────────────────────── -->
+    <section class="section section--tight" id="ayuda">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="section__title">Medios de pago</h2>
+        </div>
+        <div class="payments">
+          <div class="payment-card">
+            <span class="payment-card__icon" aria-hidden="true"><i class="fa-solid fa-money-bill-wave"></i></span>
+            <div class="payment-card__title">Transferencia / Débito</div>
+            <div class="payment-card__desc">Accede al precio más bajo publicado</div>
+          </div>
+          <div class="payment-card">
+            <span class="payment-card__icon" aria-hidden="true"><i class="fa-solid fa-credit-card"></i></span>
+            <div class="payment-card__title">Crédito hasta 24 cuotas</div>
+            <div class="payment-card__desc">Sin interés con bancos participantes</div>
+          </div>
+          <div class="payment-card">
+            <span class="payment-card__icon" aria-hidden="true"><i class="fa-solid fa-building-columns"></i></span>
+            <div class="payment-card__title">Todos los bancos</div>
+            <div class="payment-card__desc">Tarjetas de crédito y débito de cualquier banco</div>
+          </div>
+          <div class="payment-card">
+            <span class="payment-card__icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+            <div class="payment-card__title">Pago 100% seguro</div>
+            <div class="payment-card__desc">Cifrado de extremo a extremo y tokenización</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ─── Footer ─────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div>
+          <div class="logo" style="margin-bottom:var(--sp-3)">
+            <span class="logo__mark" aria-hidden="true"><i class="fa-solid fa-gamepad"></i></span>
+            <span class="logo__text">Tecno<span>Gamer</span></span>
+          </div>
+          <p style="color:var(--text-secondary);font-size:.88rem;max-width:34ch">
+            Especialistas en tecnología y gaming. Compra online con retiro inmediato en tienda
+            y despacho a todo el país.
+          </p>
+          <div class="footer__contact">
+            <div><i class="fa-solid fa-phone"></i> Ventas <strong>+56 2 2560 0040</strong></div>
+            <div><i class="fa-solid fa-envelope"></i> ventas@tecnogamer.local</div>
+          </div>
+        </div>
+        <div>
+          <h3 class="footer__title">Tienda</h3>
+          <a class="footer__link" href="#catalogo">Catálogo completo</a>
+          <a class="footer__link" href="#ofertas">Ofertas</a>
+          <a class="footer__link" href="#gamer-zone">Gamer Zone</a>
+          <a class="footer__link" href="#tiendas">Tiendas</a>
+        </div>
+        <div>
+          <h3 class="footer__title">Servicios</h3>
+          <a class="footer__link" href="#tiendas">Compra online / retiro en tienda</a>
+          <a class="footer__link" href="#">Estado de mi despacho</a>
+          <a class="footer__link" href="#" id="link-chat">Asesórate online</a>
+          <a class="footer__link" href="#">Venta a empresas</a>
+        </div>
+        <div>
+          <h3 class="footer__title">Ayuda</h3>
+          <a class="footer__link" href="#">Centro de ayuda</a>
+          <a class="footer__link" href="#">Cambios y devoluciones</a>
+          <a class="footer__link" href="#">Términos y condiciones</a>
+          <a class="footer__link" href="#">Política de privacidad</a>
+        </div>
+      </div>
+
+      <div class="footer__bottom">
+        <span>© <span id="year"></span> TecnoGamer. Todos los derechos reservados.</span>
+        <div class="trust-badges">
+          <span class="trust-badge"><i class="fa-solid fa-lock"></i> Pago cifrado SSL</span>
+          <span class="trust-badge"><i class="fa-solid fa-shield-halved"></i> PCI-DSS</span>
+          <span class="trust-badge"><i class="fa-solid fa-circle-check"></i> Garantía oficial</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ─── Carrito lateral ────────────────────────────────── -->
+  <div class="drawer-backdrop" id="cart-backdrop"></div>
+  <aside class="drawer" id="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-title" aria-hidden="true">
+    <div class="drawer__head">
+      <h2 class="drawer__title" id="cart-title">Tu carrito</h2>
+      <button class="icon-btn" id="cart-close" aria-label="Cerrar carrito"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="drawer__body" id="cart-body">
+      <div class="state">
+        <div class="state__icon" aria-hidden="true"><i class="fa-solid fa-cart-shopping"></i></div>
+        <p class="state__title">Tu carrito está vacío</p>
+        <p>Agrega productos para comenzar tu compra.</p>
+      </div>
+    </div>
+    <div class="drawer__foot" id="cart-foot" hidden>
+      <div class="cart-line"><span>Subtotal</span><span id="cart-subtotal">$ 0</span></div>
+      <div class="cart-line"><span>Despacho</span><span id="cart-shipping">—</span></div>
+      <div class="cart-line cart-line--total"><span>Total</span><span id="cart-total">$ 0</span></div>
+      <div class="cart-installment" id="cart-installment"></div>
+      <button class="btn btn--primary btn--block btn--lg" id="btn-checkout" style="margin-top:var(--sp-4)">
+        Iniciar compra
+      </button>
+      <p style="font-size:.76rem;color:var(--text-muted);text-align:center;margin-top:var(--sp-3)">
+        <i class="fa-solid fa-lock"></i> Pago protegido y cifrado
+      </p>
+    </div>
+  </aside>
+
+  <!-- ─── Menú móvil de categorías ───────────────────────── -->
+  <div class="drawer-backdrop" id="menu-backdrop"></div>
+  <aside class="drawer drawer--left" id="menu-drawer" role="dialog" aria-modal="true" aria-label="Categorías" aria-hidden="true">
+    <div class="drawer__head">
+      <h2 class="drawer__title">Categorías</h2>
+      <button class="icon-btn" id="menu-close" aria-label="Cerrar menú"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="drawer__body" id="menu-body"></div>
+  </aside>
+
+  <!-- ─── Modal ─────────────────────────────────────────── -->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal__head">
+        <h2 id="modal-title">Detalle</h2>
+        <button class="icon-btn" id="modal-close" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal__body" id="modal-body"></div>
+      <div class="modal__foot" id="modal-foot"></div>
+    </div>
+  </div>
+
+  <!-- ─── Chat de ventas ─────────────────────────────────── -->
+  <button class="chat-fab" id="chat-fab" aria-label="Abrir chat de ventas" title="¿Necesitas ayuda?"><i class="fa-solid fa-comments"></i></button>
+  <section class="chat-panel" id="chat-panel" aria-label="Chat de ventas" aria-hidden="true">
+    <div class="chat-panel__head">
+      <span class="chat-panel__avatar" aria-hidden="true"><i class="fa-solid fa-headset"></i></span>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:.9rem">Asesor TecnoGamer</div>
+        <div style="font-size:.76rem;color:var(--brand)">● En línea</div>
+      </div>
+      <button class="icon-btn" id="chat-close" aria-label="Cerrar chat"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="chat-panel__body" id="chat-body" aria-live="polite"></div>
+    <form class="chat-panel__foot" id="chat-form">
+      <label for="chat-input" class="sr-only">Escribe tu mensaje</label>
+      <input class="input" id="chat-input" style="flex:1;min-width:0" placeholder="Escribe tu consulta…" autocomplete="off">
+      <button class="btn btn--primary" type="submit" aria-label="Enviar mensaje"><i class="fa-solid fa-paper-plane"></i></button>
+    </form>
+  </section>
+
+  <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/store.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js").catch((err) =>
+          console.warn("Service worker no registrado:", err.message)
+        );
+      });
+    }
+  </script>
+</body>
+</html>

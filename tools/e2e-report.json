@@ -1,0 +1,318 @@
+{
+  "base": "http://localhost:3000",
+  "date": "2026-10-03T05:31:43.792Z",
+  "pass": 62,
+  "fail": 0,
+  "results": [
+    {
+      "name": "La tienda carga (HTML)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "El HTML incluye el catálogo",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "El HTML incluye el chat",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "CSS accesible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "JS del storefront accesible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Listado de productos",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Hay productos en el catálogo",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Producto trae imágenes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Producto trae precio",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Categorías disponibles",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Filtro por categoría \"componentes-pc\"",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Orden por precio ascendente",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Búsqueda funciona",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Detalle de producto",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Agregar al carrito como invitado",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Carrito devuelve items",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Recuperar carrito por sesión",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "El carrito conserva el item",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Resumen del carrito (subtotal/envío)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Modificar cantidad",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Producto inexistente → 404",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Cantidad 0 rechazada → 400",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Crear pedido (invitado)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Pedido tiene número",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Pedido inválido rechazado → 400",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Pasarela responde sin caer (503 si no configurada)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Config del chat",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Crear sesión de chat (invitado)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Enviar mensaje al chat",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Leer historial del chat",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Login del operador",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Dashboard del operador",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Dashboard trae métricas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Crear producto desde el panel",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Producto creado tiene ID",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "SKU duplicado rechazado (409/400)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Editar producto",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Subir imagen al producto",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Imagen asociada al producto",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Ajustar inventario",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Eliminar producto de prueba",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Listado de pedidos del panel",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Productos exponen precio de transferencia",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Precio de transferencia es menor o igual al de crédito",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Productos caros ofrecen cuotas sin interés",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Valor de cuota coherente con el precio",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Cuotas máximas no superan 24",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Productos indican disponibilidad de retiro",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Productos con retiro exponen stock por tienda",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Descuento calculado como porcentaje",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Panel sin token → 401",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Crear producto sin token → 401",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Registro de cliente",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Cliente NO accede al panel → 403",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Cliente NO puede crear productos → 403",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Token falsificado rechazado",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Intento de inyección SQL neutralizado",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "La tabla de productos sigue intacta",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Tipo de dato malicioso rechazado",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Contraseña gigante no derriba el servidor",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Límite desmesurado acotado",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "El servidor sigue en pie al final",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}
