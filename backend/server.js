@@ -115,6 +115,7 @@ app.use(helmet({
 }));
 
 // ─── CORS ────────────────────────────────────────────────────
+// En producción, restringir al dominio real. En desarrollo, permitir todo.
 const corsOptions = {
   origin: config.corsOrigin === "*" ? "*" : (req, callback) => {
     const origin = req.headers.origin || "";
@@ -125,9 +126,11 @@ const corsOptions = {
       callback(new Error("CORS no permitido"), false);
     }
   },
+  credentials: true,
   methods: config.corsMethods,
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  credentials: true,
+  exposedHeaders: ["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
+  maxAge: 86400,
   maxAge: 86400,
 };
 

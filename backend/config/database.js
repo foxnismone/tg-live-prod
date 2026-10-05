@@ -506,6 +506,28 @@ async function initialize() {
   console.log(`📊  Tablas listas. Productos: ${count.c}`);
 }
 
+// ─── Caché en memoria (rendimiento) ─────────────────────────
+// Almacena resultados de consultas frecuentes para evitar golpes
+// repetidos a la base de datos. TTL corto para mantener coherencia.
+const _cache = new Map();
+
+function cacheGet(key) {
+  const hit = _cache.get(key);
+  if (!hit) return undefined;
+  if (hit.expires < Date.now()) { _cache.delete(key); return undefined; }
+  return hit.value;
+}
+
+function cacheSet(key, value, ttlMs = 30000) {
+  _cache.set(key, { value, expires: Date.now() + ttlMs });
+}
+
+function cacheInvalidate(prefix) {
+  for (const k of _cache.keys()) {
+    if (k.startsWith(prefix)) _cache.delete(k);
+  }
+}
+
 // ─── Migraciones incrementales ───────────────────────────────
 // Cada migración es idempotente: comprueba si la columna/tabla existe
 // antes de aplicarla. Permite actualizar bases de datos ya en uso sin
@@ -653,6 +675,9 @@ module.exports = {
   exec,
   backup,
   close,
+  cacheGet,
+  cacheSet,
+  cacheInvalidate,
   db: {
     get raw() { return getDb(); },
   },

@@ -28,6 +28,7 @@ const path          = require("path");
 const fs            = require("fs");
 const { body, query, validationResult } = require("express-validator");
 const db            = require("../config/database");
+const { cacheGet, cacheSet, cacheInvalidate } = db;
 const {
   authenticateToken,
   optionalAuth,
@@ -218,6 +219,13 @@ router.get("/", optionalAuth, sanitize, [
       tags,
     } = req.query;
 
+    // Caché: clave única por combinación de filtros
+    const cacheKey = `products:${page}:${limit}:${category || ""}:${search || ""}:${minPrice || ""}:${maxPrice || ""}:${inStock || ""}:${featured || ""}:${isNew || ""}:${sort}:${tags || ""}`;
+    const cached = cacheGet(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const offset = (page - 1) * limit;
     const conditions = [];
     const params = [];
@@ -312,7 +320,7 @@ router.get("/", optionalAuth, sanitize, [
       return prod;
     });
 
-    res.json({
+    const result = {
       products,
       pagination: {
         page,
@@ -322,7 +330,12 @@ router.get("/", optionalAuth, sanitize, [
         hasNext: page < totalPages,
         hasPrev: page > 1,
       },
-    });
+    };
+
+    // Almacenar en caché (TTL 30s para mantener coherencia con la BD)
+    cacheSet(cacheKey, result, 30000);
+
+    res.json(result);
   } catch (err) {
     console.error("Error en GET /products:", err);
     res.status(500).json({ error: "Error al obtener productos", code: "PRODUCTS_ERROR" });
@@ -492,12 +505,25 @@ router.post("/", authenticateToken, requireRole("admin", "vendor"), sanitize, [
   validate,
 ], (req, res) => {
   const transaction = db.transaction(() => {
+    // Lista blanca de campos permitidos (protección contra Mass Assignment)
+    const ALLOWED_FIELDS = [
+      'name', 'sku', 'price', 'categoryId', 'description', 'stockQuantity',
+      'weight', 'compareAtPrice', 'tags', 'attributes', 'isFeatured', 'isNew',
+      'seoTitle', 'seoDescription', 'dimensions',
+      'cashPrice', 'installments', 'pickupAvailable',
+    ];
+
+    const body = {};
+    for (const field of ALLOWED_FIELDS) {
+      if (req.body[field] !== undefined) body[field] = req.body[field];
+    }
+
     const {
       name, sku, price, categoryId, description, stockQuantity,
       weight, compareAtPrice, tags, attributes, isFeatured, isNew,
       seoTitle, seoDescription, dimensions,
       cashPrice, installments, pickupAvailable,
-    } = req.body;
+    } = body;
 
     // Generar SKU si no se proporciona
     const finalSku = sku || generateUniqueSku();
@@ -562,6 +588,9 @@ router.post("/", authenticateToken, requireRole("admin", "vendor"), sanitize, [
 
     const newProduct = db.prepare("SELECT * FROM products WHERE id = ?").get(result.lastInsertRowid);
 
+    // Invalidar caché de listados
+    cacheInvalidate("products:");
+
     return formatProduct(newProduct);
   });
 
@@ -610,12 +639,28 @@ router.put("/:id", authenticateToken, requireRole("admin", "vendor"), sanitize, 
     const product = db.prepare("SELECT * FROM products WHERE id = ?").get(id);
     if (!product) throw new Error("Producto no encontrado");
 
+    // Lista blanca de campos permitidos (protección contra Mass Assignment)
+    const ALLOWED_FIELDS = [
+      'name', 'sku', 'price', 'categoryId', 'description', 'stockQuantity',
+      'weight', 'compareAtPrice', 'tags', 'attributes', 'isFeatured', 'isNew',
+      'seoTitle', 'seoDescription', 'isActive', 'dimensions',
+      'cashPrice', 'installments', 'pickupAvailable',
+    ];
+
+    // Filtrar solo los campos permitidos del body
+    const body = {};
+    for (const field of ALLOWED_FIELDS) {
+      if (req.body[field] !== undefined) {
+        body[field] = req.body[field];
+      }
+    }
+
     const {
       name, sku, price, categoryId, description, stockQuantity,
       weight, compareAtPrice, tags, attributes, isFeatured, isNew,
       seoTitle, seoDescription, isActive, dimensions,
       cashPrice, installments, pickupAvailable,
-    } = req.body;
+    } = body;
 
     const updates = [];
     const values = [];
@@ -667,8 +712,12 @@ router.put("/:id", authenticateToken, requireRole("admin", "vendor"), sanitize, 
 
     db.prepare(`UPDATE products SET ${updates.join(", ")} WHERE id = ?`).run(...values);
 
-    const updated = db.prepare("SELECT * FROM products WHERE id = ?").get(id);
-    return formatProduct(updated);
+    const updatedProduct = db.prepare("SELECT * FROM products WHERE id = ?").get(id);
+
+    // Invalidar caché de listados
+    cacheInvalidate("products:");
+
+    return formatProduct(updatedProduct);
   });
 
   try {
@@ -701,6 +750,9 @@ router.delete("/:id", authenticateToken, requireRole("admin"), sanitize, (req, r
 
     // Soft delete: desactivar
     db.prepare("UPDATE products SET is_active = 0, updated_at = datetime('now') WHERE id = ?").run(id);
+
+    // Invalidar caché de listados
+    cacheInvalidate("products:");
 
     res.json({ message: "Producto desactivado", productId: id });
   } catch (err) {
