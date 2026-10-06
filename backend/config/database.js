@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS categories (
 
 CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
 CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id);
+CREATE INDEX IF NOT EXISTS idx_categories_active ON categories(is_active);
 
 -- ─── Productos ──────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS products (
@@ -448,13 +449,19 @@ INSERT OR IGNORE INTO site_settings (key, value) VALUES
 `;
 
 // ─── Configuración del módulo (lee entorno con fallbacks) ────
+// IMPORTANTE: la ruta por defecto debe ser <raíz>/data/ecommerce.db.
+// Antes era path.resolve(__dirname, "..", "data", ...) que desde
+// backend/config/ resolvía a backend/data/ecommerce.db — una base
+// DISTINTA y vacía, así que la API servía 7 productos genéricos
+// mientras la base real (36 productos) quedaba ignorada.
+const sharedConfig = require("./index");
 const config = {
-  dbPath: process.env.DB_PATH || path.resolve(__dirname, "..", "data", "ecommerce.db"),
-  backupDir: process.env.BACKUP_DIR || path.resolve(__dirname, "..", "backups"),
-  backupRetention: parseInt(process.env.BACKUP_RETENTION_DAYS || "30", 10),
-  adminName: process.env.ADMIN_NAME || "Admin",
-  adminEmail: process.env.ADMIN_EMAIL || "admin@tecnogamer.local",
-  adminPassword: process.env.ADMIN_PASSWORD_CIPHER || "",
+  dbPath: sharedConfig.dbPath,
+  backupDir: sharedConfig.backupDir || path.resolve(__dirname, "..", "..", "backups"),
+  backupRetention: sharedConfig.backupRetention || 30,
+  adminName: sharedConfig.adminName || "Admin",
+  adminEmail: sharedConfig.adminEmail || "admin@tecnogamer.local",
+  adminPassword: sharedConfig.adminPassword || "",
 };
 
 // ─── Inicialización ──────────────────────────────────────────
@@ -469,8 +476,14 @@ async function initialize() {
   _db = new Database(config.dbPath);
   _db.pragma("journal_mode = WAL");
   _db.pragma("foreign_keys = ON");
-  _db.pragma("synchronous = NORMAL");
+  _db.pragma("synchronous = NORMAL");   // WAL + NORMAL: 2-10x más rápido que FULL
   _db.pragma("journal_size_limit = 67108864"); // 64MB
+  // ─── Tuning de rendimiento (SQLite best practices) ──────────
+  _db.pragma("cache_size = -64000");    // 64MB de caché de páginas (negativo = KB)
+  _db.pragma("mmap_size = 268435456");  // 256MB de memoria mapeada (lecturas sin copia)
+  _db.pragma("temp_store = MEMORY");    // tablas temporales en RAM
+  _db.pragma("busy_timeout = 5000");    // esperar 5s si la BD está bloqueada
+  _db.pragma("auto_vacuum = INCREMENTAL"); // evita fragmentación sin VACUUM completo
 
   // Ejecutar schema
   _db.exec(CREATE_TABLES_SQL);

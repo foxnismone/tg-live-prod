@@ -184,7 +184,18 @@ const authLimiter = rateLimit({
 });
 
 // ─── Compression ─────────────────────────────────────────────
-app.use(compression());
+// Umbral 1KB: no comprimir respuestas pequeñas (el overhead supera el ahorro).
+// Nivel 6: mejor relación compresión/CPU para JSON de API.
+app.use(compression({
+  threshold: 1024,
+  level: 6,
+  filter: (req, res) => {
+    // No comprimir imágenes ni recursos ya comprimidos
+    const type = res.getHeader("Content-Type") || "";
+    if (/image\/(png|jpe?g|webp|avif|gif)|application\/zip|font\//.test(type)) return false;
+    return compression.filter(req, res);
+  },
+}));
 
 // ─── Body Parser ─────────────────────────────────────────────
 app.use(bodyParser.json({ limit: "1mb" }));

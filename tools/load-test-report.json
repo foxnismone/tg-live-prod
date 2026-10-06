@@ -1,0 +1,15 @@
+{
+  "base": "http://localhost:3000",
+  "vus": 50,
+  "duration": 12.223,
+  "totalRequests": 7539,
+  "totalErrors": 0,
+  "rps": 616.8,
+  "errorRate": 0,
+  "p50": 78,
+  "p95": 116,
+  "p99": 144,
+  "max": 298,
+  "passed": true,
+  "date": "2026-10-06T02:55:31.850Z"
+}

@@ -19,7 +19,11 @@ const projectRoot = path.resolve(__dirname, "..", "..");
 
 let envConfig = {};
 try {
-  envConfig = dotenv.config({ path: path.resolve(projectRoot, ".env") }).parsed || {};
+  // dotenv.config() puebla process.env además de devolver .parsed.
+  // Antes solo se usaba .parsed, así que cualquier módulo que leyera
+  // process.env.X directamente (p. ej. auth.js) recibía undefined.
+  const result = dotenv.config({ path: path.resolve(projectRoot, ".env") });
+  envConfig = result.parsed || {};
 } catch (_) {
   console.warn("⚠  No se encontró .env — usando valores por defecto");
 }
@@ -29,6 +33,24 @@ function env(key, fallback) {
   return (v === undefined || v === "") ? fallback : v;
 }
 
+// ─── Secreto JWT ─────────────────────────────────────────────
+// En producción JWT_SECRET es OBLIGATORIO: si falta, abortar el arranque
+// en vez de firmar con un secreto efímero (que invalidaría todas las
+// sesiones al reiniciar y permitiría forjar tokens si el valor es predecible).
+const isProduction = env("NODE_ENV", "development") === "production";
+let jwtSecret = env("JWT_SECRET", "");
+
+if (!jwtSecret) {
+  if (isProduction) {
+    console.error("✖  FATAL: JWT_SECRET no está definido y NODE_ENV=production.");
+    console.error("   Genera uno con: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"");
+    process.exit(1);
+  }
+  // Desarrollo: secreto aleatorio por proceso (las sesiones se invalidan al reiniciar).
+  jwtSecret = require("crypto").randomBytes(32).toString("hex");
+  console.warn("⚠  JWT_SECRET no definido — usando secreto aleatorio de desarrollo.");
+}
+
 const config = {
   // Servidor
   port: parseInt(env("PORT", "3000"), 10),
@@ -36,7 +58,7 @@ const config = {
   nodeEnv: env("NODE_ENV", "development"),
 
   // Seguridad
-  jwtSecret: env("JWT_SECRET", "dev-secret-change-in-production-" + Date.now()),
+  jwtSecret: jwtSecret,
   jwtExpiresIn: env("JWT_EXPIRES_IN", "7d"),
   jwtRefreshExp: env("JWT_REFRESH_EXPIRES_IN", "30d"),
 

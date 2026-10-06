@@ -29,9 +29,14 @@ const { auditLog } = require("../middleware/errorHandler");
 const router = express.Router();
 
 // ─── Helpers ─────────────────────────────────────────────────
-const jwtSecret = process.env.JWT_SECRET;
-const jwtExpiresIn = process.env.JWT_EXPIRES_IN || "7d";
-const jwtRefreshExp = process.env.JWT_REFRESH_EXPIRES_IN || "30d";
+// IMPORTANTE: usar la config centralizada, no process.env directamente.
+// dotenv.config({path}).parsed NO puebla process.env, así que leer
+// process.env.JWT_SECRET aquí devolvía undefined y jwt.sign() fallaba
+// con "secretOrPrivateKey must have a value" (login → 500).
+const config = require("../config");
+const jwtSecret = config.jwtSecret;
+const jwtExpiresIn = config.jwtExpiresIn || "7d";
+const jwtRefreshExp = config.jwtRefreshExp || "30d";
 
 const crypto = require("crypto");
 

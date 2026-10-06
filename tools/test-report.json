@@ -1,6 +1,6 @@
 {
   "base": "http://localhost:3000",
-  "date": "2026-10-05T10:08:29.167Z",
+  "date": "2026-10-06T02:54:40.834Z",
   "pass": 61,
   "fail": 0,
   "results": [
@@ -132,7 +132,7 @@
     {
       "name": "POST /cart/items como invitado → 200/201",
       "ok": true,
-      "detail": "status=201 {\"message\":\"Item agregado al carrito\",\"cart\":{\"id\":134,\"sessionId\":\"session-1791194908254-vw60mg9i4\",\"items\":[{\"productId\":9,\"variantId\":null,\"quantit"
+      "detail": "status=201 {\"message\":\"Item agregado al carrito\",\"cart\":{\"id\":139,\"sessionId\":\"session-1791255279950-s97089cph\",\"items\":[{\"productId\":9,\"variantId\":null,\"quantit"
     },
     {
       "name": "GET /cart/summary → 200",
