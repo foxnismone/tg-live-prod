@@ -1,0 +1,32 @@
+# ─── Nunca copiar al contenedor ──────────────────────────────
+node_modules/
+npm-debug.log*
+
+# Datos locales: en producción van en volúmenes, no en la imagen
+data/
+backups/
+logs/
+uploads/
+
+# Secretos: JAMÁS dentro de una imagen
+.env
+.env.*
+!.env.example
+
+# Repositorio y CI
+.git/
+.github/
+.gitignore
+
+# Documentación y artefactos de desarrollo
+docs/
+*.md
+!README.md
+
+# Reportes de pruebas
+tools/*-report.json
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+*.swp

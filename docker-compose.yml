@@ -1,0 +1,65 @@
+# ============================================================
+#  TecnoGamer — Despliegue con Docker Compose
+# ============================================================
+#  Uso:
+#    docker compose up -d          levantar
+#    docker compose logs -f        ver logs
+#    docker compose down           detener
+#    docker compose up -d --build  actualizar tras un git pull
+#
+#  Los datos viven en volúmenes nombrados, así que sobreviven a
+#  reinicios, recreaciones del contenedor y actualizaciones.
+# ============================================================
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tecnogamer:latest
+    container_name: tecnogamer
+    restart: unless-stopped
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+      # Obligatorio: sin JWT_SECRET el arranque aborta en producción
+      JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET en un archivo .env junto a este compose}
+      DB_PATH: /app/data/ecommerce.db
+      UPLOAD_DIR: /app/uploads
+      BACKUP_DIR: /app/backups
+      SITE_URL: ${SITE_URL:-http://localhost:3000}
+      SITE_NAME: TecnoGamer
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-2000}
+      LOG_LEVEL: info
+
+    volumes:
+      # Datos persistentes — sobreviven a cualquier recreación
+      - tecnogamer-data:/app/data
+      - tecnogamer-uploads:/app/uploads
+      - tecnogamer-backups:/app/backups
+      - tecnogamer-logs:/app/logs
+
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+    # Endurecimiento del contenedor
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=64M
+
+volumes:
+  tecnogamer-data:
+  tecnogamer-uploads:
+  tecnogamer-backups:
+  tecnogamer-logs:
