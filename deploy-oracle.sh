@@ -33,13 +33,22 @@ log "Instalando dependencias del sistema"
 apt-get update -qq
 apt-get install -y -qq curl git nginx certbot python3-certbot-nginx ufw
 
-# ─── 2. Node.js 22 (NodeSource) ──────────────────────────────
-if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | cut -d. -f1 | tr -d v)" -lt 22 ]]; then
-  log "Instalando Node.js 22"
-  curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+# ─── 2. Node.js 24 (NodeSource) ──────────────────────────────
+# Node 24 y no 22: `node:sqlite` (SQLite integrado, base del proyecto)
+# es estable desde Node 23/24. En Node 22 requeriría --experimental-sqlite.
+if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | cut -d. -f1 | tr -d v)" -lt 24 ]]; then
+  log "Instalando Node.js 24"
+  curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
   apt-get install -y -qq nodejs
 fi
 log "Node $(node -v) · npm $(npm -v)"
+
+# Verificar que node:sqlite funcione sin flags (base del proyecto)
+if ! node -e "require('node:sqlite')" >/dev/null 2>&1; then
+  die "node:sqlite no está disponible en Node $(node -v).
+       El proyecto lo necesita para la base de datos.
+       Requiere Node >= 23 (o 22 con --experimental-sqlite)."
+fi
 
 # ─── 3. Código de la aplicación ──────────────────────────────
 if [[ -d "$APP_DIR/.git" ]]; then
@@ -54,10 +63,19 @@ fi
 cd "$APP_DIR"
 
 # ─── 4. Dependencias de Node ─────────────────────────────────
-# --ignore-scripts: better-sqlite3 no compila en todos los hosts y el
-# proyecto usa el adaptador sobre node:sqlite integrado en Node 22+.
+# --ignore-scripts evita que better-sqlite3 intente compilar con node-gyp
+# y rompa toda la instalación (el proyecto usa node:sqlite, integrado).
+# Pero `sharp` SÍ necesita su script para colocar el binario de libvips,
+# así que se reconstruye explícitamente después.
 log "Instalando dependencias de Node"
 npm install --ignore-scripts --omit=dev --no-audit --no-fund
+npm rebuild sharp --no-audit --no-fund
+
+# Verificar las dependencias críticas antes de continuar
+node -e "require('sharp')"        || die "sharp no carga — las imágenes no se podrán procesar"
+node -e "require('node:sqlite')"  || die "node:sqlite no está disponible — la base de datos no funcionará"
+node -e "require('bcryptjs')"     || die "bcryptjs no carga — el login fallará"
+log "Dependencias críticas verificadas (sharp, node:sqlite, bcryptjs)"
 
 # ─── 5. Variables de entorno ─────────────────────────────────
 ENV_FILE="$APP_DIR/.env"

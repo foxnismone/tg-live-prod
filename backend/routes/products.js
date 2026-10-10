@@ -23,11 +23,31 @@
 
 const express       = require("express");
 const multer        = require("multer");
-const sharp         = require("sharp");
 const path          = require("path");
 const fs            = require("fs");
 const { body, query, validationResult } = require("express-validator");
 const db            = require("../config/database");
+
+// ─── Sharp (procesado de imágenes) — carga tolerante a fallos ───
+// Sharp es un módulo NATIVO: si el binario no está compilado para la
+// plataforma, `require("sharp")` lanza al cargar el módulo y se lleva por
+// delante TODO el router de productos (el servidor ni arranca).
+// Con `npm install --ignore-scripts` (obligatorio en este proyecto porque
+// better-sqlite3 rompe la instalación) el binario de sharp NO se descarga.
+// Solución: cargarlo con try/catch y degradar a subida sin thumbnail.
+let sharp = null;
+let sharpError = null;
+try {
+  sharp = require("sharp");
+} catch (err) {
+  sharpError = err.message;
+  console.warn(
+    "⚠  sharp no disponible — las imágenes se subirán SIN thumbnail.\n" +
+    "   Motivo: " + err.message.split("\n")[0] + "\n" +
+    "   Para habilitarlo: npm install sharp --include=scripts"
+  );
+}
+
 const { cacheGet, cacheSet, cacheInvalidate } = db;
 const {
   authenticateToken,
@@ -791,20 +811,35 @@ router.post("/:id/images", authenticateToken, requireRole("admin", "vendor"), (r
       let sortOrder = (lastImage?.max_order || -1) + 1;
 
       for (const file of files) {
-        // Crear thumbnail con Sharp
-        const thumbName = `thumb-${path.basename(file.filename)}`;
-        const thumbPath = path.join(productsDir, thumbName);
+        const originalUrl = `/uploads/products/${path.basename(file.filename)}`;
+        let thumbUrl = null;
 
-        await sharp(file.path)
-          .resize(config.thumbnailMaxW || 400, config.thumbnailMaxH || 400, {
-            fit: "inside",
-            withoutEnlargement: true,
-          })
-          .jpeg({ quality: 85 })
-          .toFile(thumbPath);
+        // Crear thumbnail con Sharp (opcional: si no está disponible,
+        // se guarda la imagen original como thumbnail).
+        if (sharp) {
+          try {
+            const thumbName = `thumb-${path.basename(file.filename)}`;
+            const thumbPath = path.join(productsDir, thumbName);
+
+            await sharp(file.path)
+              .resize(config.thumbnailMaxW || 400, config.thumbnailMaxH || 400, {
+                fit: "inside",
+                withoutEnlargement: true,
+              })
+              .jpeg({ quality: 85 })
+              .toFile(thumbPath);
+
+            thumbUrl = `/uploads/products/${thumbName}`;
+          } catch (imgErr) {
+            console.warn("⚠  No se pudo generar el thumbnail:", imgErr.message);
+            thumbUrl = originalUrl;
+          }
+        } else {
+          // Sin sharp: usar la imagen original en lugar del thumbnail
+          thumbUrl = originalUrl;
+        }
 
         // Insertar en BD
-        const thumbUrl = `/uploads/products/${thumbName}`;
         const result = db.prepare(
           `INSERT INTO product_images (product_id, url, alt_text, sort_order, is_primary)
            VALUES (?, ?, ?, ?, 0)`

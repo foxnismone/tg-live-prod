@@ -1,6 +1,6 @@
 {
   "base": "http://localhost:3000",
-  "date": "2026-10-10T03:57:59.505Z",
+  "date": "2026-10-10T04:50:57.607Z",
   "pass": 61,
   "fail": 0,
   "results": [
@@ -132,7 +132,7 @@
     {
       "name": "POST /cart/items como invitado → 200/201",
       "ok": true,
-      "detail": "status=201 {\"message\":\"Item agregado al carrito\",\"cart\":{\"id\":642,\"sessionId\":\"session-1791604678371-nv8ctn3xm\",\"items\":[{\"productId\":9,\"variantId\":null,\"quantit"
+      "detail": "status=201 {\"message\":\"Item agregado al carrito\",\"cart\":{\"id\":669,\"sessionId\":\"session-1791607856492-5qkfxd2nm\",\"items\":[{\"productId\":9,\"variantId\":null,\"quantit"
     },
     {
       "name": "GET /cart/summary → 200",
@@ -307,7 +307,7 @@
     {
       "name": "rate limit activo en login (429)",
       "ok": true,
-      "detail": "codes=429"
+      "detail": "codes=401,429"
     }
   ]
 }
