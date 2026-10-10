@@ -270,3 +270,93 @@ table.data tbody tr:hover { background: var(--bg-elevated); }
   .admin-topbar { padding: var(--sp-3) var(--sp-4); }
   .login-card { padding: var(--sp-5); }
 }
+
+/* ============================================================
+   MÓDULOS — Interruptores de activación (panel de operador)
+   ============================================================ */
+
+.modules-list { display: grid; gap: var(--sp-3); }
+
+.module-toggle {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-elevated, var(--bg-surface));
+  border: 1px solid var(--border-light);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.module-toggle:hover { border-color: var(--brand); }
+.module-toggle:has(.module-switch:focus-visible) {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.module-toggle__body { display: grid; gap: 2px; min-width: 0; }
+.module-toggle__title { font-weight: 700; font-size: .95rem; }
+.module-toggle__desc { font-size: .82rem; color: var(--text-secondary); line-height: 1.45; }
+
+.module-toggle__state {
+  font-size: .75rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--text-secondary);
+  padding: 3px 10px; border-radius: 999px;
+  background: var(--bg-base); border: 1px solid var(--border-light);
+  white-space: nowrap;
+}
+.module-toggle:has(.module-switch:checked) .module-toggle__state {
+  color: var(--brand); border-color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 12%, transparent);
+}
+
+/* Interruptor deslizante accesible */
+.module-switch {
+  appearance: none;
+  width: 46px; height: 26px; flex: none;
+  background: var(--border-light);
+  border-radius: 999px;
+  position: relative; cursor: pointer;
+  transition: background .18s ease;
+}
+.module-switch::after {
+  content: ""; position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  transition: transform .18s ease;
+}
+.module-switch:checked { background: var(--brand); }
+.module-switch:checked::after { transform: translateX(20px); }
+.module-switch:disabled { opacity: .55; cursor: wait; }
+
+/* Aviso del modo de carrito */
+.mode-banner {
+  display: flex; gap: var(--sp-3); align-items: flex-start;
+  margin-top: var(--sp-4);
+  padding: var(--sp-4);
+  border-radius: var(--r-md);
+  border-left: 4px solid var(--brand);
+  background: color-mix(in srgb, var(--brand) 8%, transparent);
+}
+.mode-banner--order {
+  border-left-color: var(--warning, #f59e0b);
+  background: color-mix(in srgb, var(--warning, #f59e0b) 10%, transparent);
+}
+.mode-banner__icon { font-size: 1.5rem; line-height: 1; }
+.mode-banner strong { display: block; margin-bottom: 4px; font-size: .95rem; }
+.mode-banner p { margin: 0; font-size: .85rem; color: var(--text-secondary); line-height: 1.5; }
+
+/* Campos dentro de los paneles de configuración */
+.panel__body .form-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3);
+}
+.panel__body .form-field { display: grid; gap: 4px; margin-bottom: var(--sp-3); }
+.panel__body .form-label { font-size: .85rem; font-weight: 600; }
+.panel__body .form-hint { font-size: .78rem; color: var(--text-secondary); }
+
+@media (max-width: 720px) {
+  .panel__body .form-row { grid-template-columns: 1fr; }
+  .module-toggle { grid-template-columns: auto 1fr; }
+  .module-toggle__state { grid-column: 2; justify-self: start; }
+}

@@ -30,7 +30,7 @@ const {
   validate,
   sanitize,
 } = require("../middleware/errorHandler");
-const { body, query } = require("express-validator");
+const { body, query, param } = require("express-validator");
 
 const router = express.Router();
 
@@ -40,26 +40,25 @@ router.use(authenticateToken, requireRole("admin"));
 // ─── GET /api/v1/admin/dashboard — KPIs ────────────────────
 router.get("/dashboard", sanitize, (req, res) => {
   try {
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-
     // Pedidos
+    // OJO: comparar con date('now') de SQLite, no con un ISO de JavaScript.
+    // SQLite guarda 'YYYY-MM-DD HH:MM:SS' y JS produce 'YYYY-MM-DDTHH:MM:SS.sssZ';
+    // como 'T' (0x54) > ' ' (0x20), la comparación de strings daba siempre falso
+    // y el dashboard mostraba 0 pedidos del día aunque hubiera ventas.
     const ordersToday = db.prepare(
       `SELECT COUNT(*) as c, COALESCE(SUM(total), 0) as revenue
-       FROM orders WHERE status NOT IN ('cancelled', 'pending') AND date(created_at) >= ?`
-    ).get(startOfDay.toISOString());
+       FROM orders WHERE status NOT IN ('cancelled', 'pending') AND date(created_at) >= date('now')`
+    ).get();
 
     const ordersMonth = db.prepare(
       `SELECT COUNT(*) as c, COALESCE(SUM(total), 0) as revenue
-       FROM orders WHERE status NOT IN ('cancelled', 'pending') AND date(created_at) >= ?`
-    ).get(startOfMonth.toISOString());
+       FROM orders WHERE status NOT IN ('cancelled', 'pending') AND date(created_at) >= date('now','start of month')`
+    ).get();
 
     const ordersYear = db.prepare(
       `SELECT COUNT(*) as c, COALESCE(SUM(total), 0) as revenue
-       FROM orders WHERE status NOT IN ('cancelled', 'pending') AND date(created_at) >= ?`
-    ).get(startOfYear.toISOString());
+       FROM orders WHERE status NOT IN ('cancelled', 'pending') AND date(created_at) >= date('now','start of year')`
+    ).get();
 
     // Pedidos por día (últimos 7 días)
     const ordersByDay = db.prepare(
@@ -987,6 +986,22 @@ router.get("/settings", sanitize, (req, res) => {
 });
 
 // ─── PUT /api/v1/admin/settings — Actualizar ────────────────
+// Lista blanca de claves editables. Sin esto, un operador (o un token
+// robado) podría escribir claves arbitrarias en site_settings y, si alguna
+// llegara a PUBLIC_SETTINGS en config.js, filtrar datos al frontend.
+const EDITABLE_SETTINGS = new Set([
+  "site_name", "site_description", "currency", "locale",
+  "contact_email", "support_phone", "address", "about_text",
+  "shipping_flat_rate", "free_shipping_threshold", "tax_rate_default",
+  "return_policy_days", "chat_welcome_message",
+  "store_enabled", "store_name", "store_address", "store_hours",
+  "store_phone", "store_pickup_enabled", "store_pickup_ready_minutes",
+  "payment_gateway_enabled", "payment_gateway_provider",
+  // Módulo de taller
+  "repair_enabled", "repair_name", "repair_phone", "repair_hours",
+  "repair_address", "repair_warranty_days", "repair_intro",
+]);
+
 router.put("/settings", sanitize, [
   body("settings").isObject().withMessage("settings debe ser un objeto"),
   validate,
@@ -997,6 +1012,13 @@ router.put("/settings", sanitize, [
     let errors = 0;
 
     for (const [key, value] of Object.entries(settings)) {
+      // Rechazar claves fuera de la lista blanca
+      if (!EDITABLE_SETTINGS.has(key)) {
+        errors++;
+        results.push({ key, success: false, error: "Clave no editable" });
+        continue;
+      }
+
       try {
         db.prepare(
           `INSERT INTO site_settings (key, value, updated_at)
@@ -1011,6 +1033,18 @@ router.put("/settings", sanitize, [
       }
     }
 
+    // Registrar el cambio en el log de auditoría
+    try {
+      db.prepare(
+        `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details, ip_address, created_at)
+         VALUES (?, 'settings_update', 'site_settings', NULL, ?, ?, datetime('now'))`
+      ).run(
+        req.user?.userId || null,
+        JSON.stringify({ keys: Object.keys(settings) }),
+        req.ip || null
+      );
+    } catch (_) { /* la auditoría no debe romper la operación */ }
+
     res.json({
       message: `Configuración actualizada: ${results.filter(r => r.success).length} exitosos, ${errors} errores`,
       results,
@@ -1020,5 +1054,164 @@ router.put("/settings", sanitize, [
     res.status(500).json({ error: "Error", code: "SETTINGS_ERROR" });
   }
 });
+
+// ═══════════════════════════════════════════════════════════════
+// MÓDULO DE TIENDAS FÍSICAS (configurable y desconectable)
+// ═══════════════════════════════════════════════════════════════
+
+// ─── GET /api/v1/admin/stores — Listar todas ────────────────
+router.get("/stores", sanitize, (req, res) => {
+  try {
+    const stores = db.prepare("SELECT * FROM stores ORDER BY sort_order, name").all();
+    res.json({
+      stores: stores.map(s => ({
+        id: s.id,
+        code: s.code,
+        name: s.name,
+        address: s.address,
+        city: s.city,
+        region: s.region,
+        phone: s.phone,
+        hours: s.hours,
+        latitude: s.latitude,
+        longitude: s.longitude,
+        isPickup: !!s.is_pickup,
+        isActive: !!s.is_active,
+        sortOrder: s.sort_order,
+        createdAt: s.created_at,
+        updatedAt: s.updated_at,
+      })),
+    });
+  } catch (err) {
+    console.error("Error en GET /stores:", err);
+    res.status(500).json({ error: "Error al obtener tiendas", code: "STORES_ERROR" });
+  }
+});
+
+// ─── POST /api/v1/admin/stores — Crear ──────────────────────
+router.post("/stores", sanitize, [
+  body("code").trim().notEmpty().withMessage("code es obligatorio").isLength({ max: 50 }),
+  body("name").trim().notEmpty().withMessage("name es obligatorio").isLength({ max: 150 }),
+  body("address").optional().trim().isLength({ max: 300 }),
+  body("city").optional().trim().isLength({ max: 100 }),
+  body("region").optional().trim().isLength({ max: 100 }),
+  body("phone").optional().trim().isLength({ max: 40 }),
+  body("hours").optional().trim().isLength({ max: 120 }),
+  body("latitude").optional({ nullable: true }).isFloat({ min: -90, max: 90 }),
+  body("longitude").optional({ nullable: true }).isFloat({ min: -180, max: 180 }),
+  body("isPickup").optional().isBoolean().toBoolean(),
+  body("isActive").optional().isBoolean().toBoolean(),
+  body("sortOrder").optional().isInt().toInt(),
+  validate,
+], (req, res) => {
+  try {
+    const {
+      code, name, address = null, city = null, region = null, phone = null,
+      hours = null, latitude = null, longitude = null,
+      isPickup = true, isActive = true, sortOrder = 0,
+    } = req.body;
+
+    const exists = db.prepare("SELECT id FROM stores WHERE code = ?").get(code);
+    if (exists) {
+      return res.status(409).json({ error: "Ya existe una tienda con ese código", code: "STORE_CODE_EXISTS" });
+    }
+
+    const result = db.prepare(
+      `INSERT INTO stores (code, name, address, city, region, phone, hours, latitude, longitude, is_pickup, is_active, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(code, name, address, city, region, phone, hours, latitude, longitude,
+          isPickup ? 1 : 0, isActive ? 1 : 0, sortOrder);
+
+    const created = db.prepare("SELECT * FROM stores WHERE id = ?").get(result.lastInsertRowid);
+    res.status(201).json({ message: "Tienda creada", store: created });
+  } catch (err) {
+    console.error("Error al crear tienda:", err);
+    res.status(500).json({ error: "Error al crear la tienda", code: "STORE_CREATE_ERROR" });
+  }
+});
+
+// ─── PUT /api/v1/admin/stores/:id — Actualizar ──────────────
+router.put("/stores/:id", sanitize, [
+  param("id").isInt({ min: 1 }).toInt(),
+  body("name").optional().trim().isLength({ min: 1, max: 150 }),
+  body("address").optional({ nullable: true }).trim().isLength({ max: 300 }),
+  body("city").optional({ nullable: true }).trim().isLength({ max: 100 }),
+  body("region").optional({ nullable: true }).trim().isLength({ max: 100 }),
+  body("phone").optional({ nullable: true }).trim().isLength({ max: 40 }),
+  body("hours").optional({ nullable: true }).trim().isLength({ max: 120 }),
+  body("latitude").optional({ nullable: true }).isFloat({ min: -90, max: 90 }),
+  body("longitude").optional({ nullable: true }).isFloat({ min: -180, max: 180 }),
+  body("isPickup").optional().isBoolean().toBoolean(),
+  body("isActive").optional().isBoolean().toBoolean(),
+  body("sortOrder").optional().isInt().toInt(),
+  validate,
+], (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = db.prepare("SELECT id FROM stores WHERE id = ?").get(id);
+    if (!existing) {
+      return res.status(404).json({ error: "Tienda no encontrada", code: "STORE_NOT_FOUND" });
+    }
+
+    // Lista blanca de campos (protección contra Mass Assignment)
+    const MAP = {
+      name: "name", address: "address", city: "city", region: "region",
+      phone: "phone", hours: "hours", latitude: "latitude", longitude: "longitude",
+      isPickup: "is_pickup", isActive: "is_active", sortOrder: "sort_order",
+    };
+
+    const updates = [];
+    const values = [];
+    for (const [field, column] of Object.entries(MAP)) {
+      if (req.body[field] !== undefined) {
+        let v = req.body[field];
+        if (field === "isPickup" || field === "isActive") v = v ? 1 : 0;
+        updates.push(`${column} = ?`);
+        values.push(v);
+      }
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: "No hay campos para actualizar", code: "NO_FIELDS" });
+    }
+
+    updates.push("updated_at = datetime('now')");
+    values.push(id);
+
+    db.prepare(`UPDATE stores SET ${updates.join(", ")} WHERE id = ?`).run(...values);
+    const updated = db.prepare("SELECT * FROM stores WHERE id = ?").get(id);
+    res.json({ message: "Tienda actualizada", store: updated });
+  } catch (err) {
+    console.error("Error al actualizar tienda:", err);
+    res.status(500).json({ error: "Error al actualizar la tienda", code: "STORE_UPDATE_ERROR" });
+  }
+});
+
+// ─── DELETE /api/v1/admin/stores/:id — Eliminar ─────────────
+router.delete("/stores/:id", sanitize, [
+  param("id").isInt({ min: 1 }).toInt(),
+  validate,
+], (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = db.prepare("SELECT id FROM stores WHERE id = ?").get(id);
+    if (!existing) {
+      return res.status(404).json({ error: "Tienda no encontrada", code: "STORE_NOT_FOUND" });
+    }
+    db.prepare("DELETE FROM stores WHERE id = ?").run(id);
+    res.json({ message: "Tienda eliminada", storeId: id });
+  } catch (err) {
+    console.error("Error al eliminar tienda:", err);
+    res.status(500).json({ error: "Error al eliminar la tienda", code: "STORE_DELETE_ERROR" });
+  }
+});
+
+/* ══════════════════════════════════════════════════════════
+   MÓDULO DE TALLER — Órdenes de reparación y alertas
+   ══════════════════════════════════════════════════════════
+   Se monta aquí (no en server.js) para heredar el
+   authenticateToken + requireRole("admin") ya aplicados arriba. */
+const adminRepairRoutes = require("./admin-repairs");
+router.use("/", adminRepairRoutes);
 
 module.exports = router;

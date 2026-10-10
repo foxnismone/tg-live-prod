@@ -65,7 +65,10 @@ const chatRoutes     = require("./routes/chat");
 const uploadRoutes   = require("./routes/uploads");
 const adminRoutes    = require("./routes/admin");
 const webhookRoutes  = require("./routes/webhooks");
-const chatWebRoutes  = require("./routes/chat-web");
+const chatWebRoutes   = require("./routes/chat-web");
+const configRoutes    = require("./routes/config");
+const repairRoutes    = require("./routes/repairs");
+const repairApiRoutes = require("./routes/repairs-api");
 const { errorHandler, notFound } = require("./middleware/errorHandler");
 const { securityHeaders } = require("./middleware/securityHeaders");
 
@@ -263,6 +266,9 @@ app.use(`${apiPrefix}/upload`, uploadRoutes);
 app.use(`${apiPrefix}/admin`, adminRoutes);
 app.use(`${apiPrefix}/webhooks`, webhookRoutes);
 app.use(`${apiPrefix}/chat-web`, chatWebRoutes);
+app.use(`${apiPrefix}/config`, configRoutes);
+app.use(`${apiPrefix}/repairs`, repairRoutes);
+app.use(`${apiPrefix}/repairs-api`, repairApiRoutes);
 
 // Stripe checkout session builder (endpoint público para frontend)
 app.post(`${apiPrefix}/checkout/create-session`, async (req, res) => {

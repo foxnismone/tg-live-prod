@@ -57,7 +57,47 @@
     inStock: "",
     products: [],
     cart: { items: [], subtotal: 0 },
+    // Configuración pública del sitio (módulos, envío, moneda).
+    // Se carga una vez al inicio desde GET /api/v1/config.
+    config: null,
   };
+
+  /* ─── Configuración del sitio ────────────────────────── */
+  // Valores por defecto mientras llega la config del backend.
+  const COMMERCE = {
+    shippingFlatRate: 5990,
+    freeShippingThreshold: 75000,
+    currency: "CLP",
+  };
+
+  async function loadSiteConfig() {
+    try {
+      const cfg = await API.config();
+      state.config = cfg;
+
+      // Aplicar valores de comercio reales
+      if (cfg?.commerce) {
+        COMMERCE.shippingFlatRate = Number(cfg.commerce.shippingFlatRate) || 0;
+        COMMERCE.freeShippingThreshold = Number(cfg.commerce.freeShippingThreshold) || 0;
+        COMMERCE.currency = cfg.site?.currency || "CLP";
+      }
+
+      // Nombre y datos del sitio
+      if (cfg?.site?.name) {
+        document.title = `${cfg.site.name} — Tecnología y Gaming`;
+        $$("[data-site-name]").forEach(el => { el.textContent = cfg.site.name; });
+      }
+
+      return cfg;
+    } catch (_) {
+      // Si falla, la tienda sigue funcionando con los valores por defecto
+      return null;
+    }
+  }
+
+  /** Costo de envío según el subtotal y la config del backend. */
+  const shippingFor = (subtotal) =>
+    subtotal >= COMMERCE.freeShippingThreshold ? 0 : COMMERCE.shippingFlatRate;
 
   /* ─── Notificaciones ─────────────────────────────────── */
   const toasts = $("#toasts");
@@ -338,32 +378,49 @@
     }
   }
 
-  /* ─── Tiendas (retiro en tienda) ─────────────────────── */
-  // Direcciones reales de pc Factory (referencia del retail chileno)
-  const STORES = [
-    { name: "Santiago Centro",  addr: "Av. Libertador B. O'Higgins 1234, Santiago", hours: "Lun–Sáb 10:00–20:00", phone: "+56 2 2560 0040" },
-    { name: "Providencia",      addr: "Av. Providencia 2124, Providencia",         hours: "Lun–Sáb 10:00–20:30", phone: "+56 2 2560 0040" },
-    { name: "Maipú",            addr: "Av. Pajaritos 3050, Maipú",               hours: "Lun–Dom 10:00–21:00", phone: "+56 2 2560 0040" },
-    { name: "Valparaíso",       addr: "Calle Prat 850, Valparaíso",               hours: "Lun–Sáb 10:00–19:30", phone: "+56 2 2560 0040" },
-    { name: "Concepción",       addr: "Av. O'Higgins 456, Concepción",            hours: "Lun–Sáb 10:00–20:00", phone: "+56 2 2560 0040" },
-    { name: "Temuco",           addr: "Av. Alemania 0875, Temuco",                hours: "Lun–Sáb 10:00–19:30", phone: "+56 2 2560 0040" },
-    { name: "Antofagasta",      addr: "Av. Balmaceda 2355, Antofagasta",          hours: "Lun–Sáb 10:00–20:00", phone: "+56 2 2560 0040" },
-    { name: "La Serena",        addr: "Av. Francisco de Aguirre 220, La Serena",  hours: "Lun–Sáb 10:00–19:30", phone: "+56 2 2560 0040" },
-  ];
+  /* ─── Tiendas (módulo configurable y desconectable) ──── */
+  // Las tiendas vienen del backend (GET /api/v1/config/stores).
+  // Si el módulo está desconectado, la sección completa se oculta.
+  let STORES = [];
 
-  function loadStores() {
+  async function loadStores() {
+    const section = $("#tiendas");
     const grid = $("#stores-grid");
     if (!grid) return;
-    grid.innerHTML = STORES.map(s => `
-      <div class="store-card">
-        <span class="store-card__icon" aria-hidden="true">🏬</span>
-        <div>
-          <div class="store-card__name">${esc(s.name)}</div>
-          <div class="store-card__meta">${esc(s.addr)}</div>
-          <div class="store-card__meta">${esc(s.hours)}</div>
-          <div class="store-card__meta">📞 ${esc(s.phone)}</div>
-        </div>
-      </div>`).join("");
+
+    try {
+      const res = await API.request("/config/stores");
+
+      // Módulo desconectado → ocultar toda la sección
+      if (!res.moduleEnabled || !res.stores?.length) {
+        if (section) section.hidden = true;
+        return;
+      }
+
+      STORES = res.stores;
+      if (section) section.hidden = false;
+
+      grid.innerHTML = STORES.map(s => `
+        <div class="store-card">
+          <span class="store-card__icon" aria-hidden="true">🏬</span>
+          <div>
+            <div class="store-card__name">${esc(s.name)}</div>
+            ${s.address ? `<div class="store-card__meta">${esc(s.address)}${s.city ? `, ${esc(s.city)}` : ""}</div>` : ""}
+            ${s.hours ? `<div class="store-card__meta">🕐 ${esc(s.hours)}</div>` : ""}
+            ${s.phone ? `<div class="store-card__meta">📞 ${esc(s.phone)}</div>` : ""}
+            ${s.isPickup ? `<div class="store-card__meta"><span class="badge badge--ok">Retiro disponible</span></div>` : ""}
+          </div>
+        </div>`).join("");
+
+      // Actualizar la nota de retiro con los minutos configurados
+      const note = $(".stores__note");
+      if (note && res.pickupEnabled) {
+        const mins = state.config?.modules?.store?.pickupReadyMinutes || 90;
+        note.textContent = `ℹ️ El stock por tienda se actualiza cada 10 minutos. El retiro está disponible desde ${mins} minutos después de confirmado el pedido, presentando el documento de compra y cédula de identidad.`;
+      }
+    } catch (_) {
+      if (section) section.hidden = true;
+    }
   }
 
   /* ─── Barra de anuncios rotativa ─────────────────────── */
@@ -446,8 +503,9 @@
     }).join("");
 
     const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-    const shipping = subtotal >= 75000 ? 0 : 5990;
+    const shipping = shippingFor(subtotal);
     const total = subtotal + shipping;
+    const unitCount = items.reduce((s, i) => s + i.quantity, 0);
 
     $("#cart-subtotal").textContent = money(subtotal);
     $("#cart-shipping").textContent = shipping === 0 ? "Gratis 🎉" : money(shipping);
@@ -461,6 +519,37 @@
         ? `o hasta <strong>${n} cuotas sin interés</strong> de ${money(Math.round(total / n))}`
         : "";
       instEl.hidden = n === 0;
+    }
+
+    /* ─── Claridad de compra: contador, barra de envío y modo ─── */
+    const infoEl = $("#cart-info");
+    if (infoEl) {
+      const freeThreshold = Number(state.config?.commerce?.freeShippingThreshold || 0);
+      const missing = freeThreshold - subtotal;
+      const gateway = !!state.config?.modules?.payment?.gatewayEnabled;
+
+      let shippingBar = "";
+      if (freeThreshold > 0 && missing > 0) {
+        const pct = Math.min(100, Math.round((subtotal / freeThreshold) * 100));
+        shippingBar = `
+          <div class="ship-bar">
+            <p class="ship-bar__msg">Te faltan <strong>${money(missing)}</strong> para el <strong>envío gratis</strong></p>
+            <div class="ship-bar__track" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
+              <div class="ship-bar__fill" style="width:${pct}%"></div>
+            </div>
+          </div>`;
+      } else if (freeThreshold > 0) {
+        shippingBar = `<div class="ship-bar ship-bar--done"><p class="ship-bar__msg">🎉 ¡Tienes <strong>envío gratis</strong>!</p></div>`;
+      }
+
+      infoEl.innerHTML = `
+        <p class="cart-info__count">${unitCount} ${unitCount === 1 ? "producto" : "productos"} en tu carrito</p>
+        ${shippingBar}
+        <p class="cart-info__mode ${gateway ? "is-pay" : "is-order"}">
+          ${gateway
+            ? "💳 <strong>Carro de compra:</strong> pagas en línea al finalizar."
+            : "📋 <strong>Orden de compra:</strong> envías tu pedido y te contactamos para coordinar el pago. No se hace ningún cargo automático."}
+        </p>`;
     }
 
     foot.hidden = false;
@@ -584,7 +673,7 @@
 
       // Stock por tienda (retiro inmediato)
       let storesHtml = "";
-      if (p.storeStock && Object.keys(p.storeStock).length) {
+      if (p.storeStock && Object.keys(p.storeStock).length && state.config?.modules?.store?.enabled !== false) {
         const entries = Object.entries(p.storeStock);
         storesHtml = `
           <div class="pd__stores">
@@ -593,7 +682,8 @@
             </div>
             <div class="pd__store-list">
               ${entries.map(([sid, qty]) => {
-                const store = STORES.find(s => s.name.toLowerCase().replace(/\s+/g, "-").includes(sid.split("-")[0]))
+                // El id de tienda en storeStock coincide con stores.code
+                const store = STORES.find(s => s.code === sid)
                   || { name: sid.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()) };
                 return `<div class="pd__store">
                   <span>${esc(store.name)}</span>
@@ -661,67 +751,171 @@
     }
   }
 
-  /* ─── Checkout ───────────────────────────────────────── */
+  /* ─── Checkout (adaptativo: orden de compra o carro con pago) ─── */
+  /**
+   * Modo del carrito:
+   *   'purchase_order' → no hay pasarela integrada. El cliente envía su
+   *                      pedido y el operador lo confirma y cobra aparte.
+   *   'cart'           → hay pasarela activa. El cliente paga online.
+   * El modo lo decide el backend (modules.payment.cartMode).
+   */
+  const isGatewayEnabled = () => !!state.config?.modules?.payment?.gatewayEnabled;
+
   function showCheckout() {
     const items = state.cart.items || [];
     if (!items.length) { toast("Tu carrito está vacío", "warning"); return; }
 
     const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-    const shipping = subtotal >= 75000 ? 0 : 5990;
+    const shipping = shippingFor(subtotal);
     const total = subtotal + shipping;
+
+    const gateway = isGatewayEnabled();
+    const pickupEnabled = !!state.config?.modules?.store?.pickupEnabled;
+    const storeName = state.config?.modules?.store?.name || "la tienda";
+
+    // Modo entrega: despacho a domicilio o retiro en tienda
+    const deliveryBlock = pickupEnabled ? `
+      <fieldset class="form-fieldset">
+        <legend class="form-legend">¿Cómo quieres recibir tu pedido?</legend>
+        <div class="radio-group">
+          <label class="radio-card">
+            <input type="radio" name="delivery" value="shipping" checked>
+            <span class="radio-card__body">
+              <span class="radio-card__title">🚚 Despacho a domicilio</span>
+              <span class="radio-card__desc">${shipping === 0 ? "Envío gratis" : money(shipping) + " · 2 a 5 días hábiles"}</span>
+            </span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="delivery" value="pickup">
+            <span class="radio-card__body">
+              <span class="radio-card__title">🏬 Retiro en tienda</span>
+              <span class="radio-card__desc">Sin costo · ${esc(storeName)}</span>
+            </span>
+          </label>
+        </div>
+      </fieldset>` : "";
+
+    // Aviso honesto según el modo de compra
+    const modeNotice = gateway
+      ? `<p class="notice notice--info">
+           <span aria-hidden="true">🔒</span>
+           <span>Serás redirigido a la <strong>pasarela de pago segura</strong> para completar la compra.
+           Tus datos de tarjeta <strong>nunca</strong> pasan por nuestros servidores.</span>
+         </p>`
+      : `<p class="notice notice--warn">
+           <span aria-hidden="true">📋</span>
+           <span>Esto es una <strong>orden de compra</strong>: registramos tu pedido y un ejecutivo
+           te contactará al email y teléfono que indiques para coordinar el pago y la entrega.
+           <strong>No se realizará ningún cargo automático.</strong></span>
+         </p>`;
 
     openModal(
       "Finalizar compra",
       `<div class="steps">
-        <span class="step is-active"><span class="step__num">1</span> Datos</span>
+        <span class="step is-active"><span class="step__num">1</span> Tus datos</span>
         <span class="step__sep">›</span>
-        <span class="step"><span class="step__num">2</span> Envío</span>
+        <span class="step"><span class="step__num">2</span> Entrega</span>
         <span class="step__sep">›</span>
-        <span class="step"><span class="step__num">3</span> Pago</span>
+        <span class="step"><span class="step__num">3</span> ${gateway ? "Pago" : "Confirmación"}</span>
       </div>
 
       <form class="form" id="checkout-form" novalidate>
         <div class="form-row">
           <div class="form-field">
-            <label class="form-label" for="co-name">Nombre completo <span class="req">*</span></label>
-            <input class="input" id="co-name" name="name" required autocomplete="name">
-            <span class="form-error" data-error-for="co-name"></span>
+            <label class="form-label" for="co-name">Nombre completo <span class="req" aria-hidden="true">*</span></label>
+            <input class="input" id="co-name" name="name" required autocomplete="name"
+                   aria-describedby="err-co-name">
+            <span class="form-error" id="err-co-name" data-error-for="co-name" role="alert"></span>
           </div>
           <div class="form-field">
-            <label class="form-label" for="co-email">Email <span class="req">*</span></label>
-            <input class="input" id="co-email" name="email" type="email" required autocomplete="email">
-            <span class="form-error" data-error-for="co-email"></span>
+            <label class="form-label" for="co-email">Email <span class="req" aria-hidden="true">*</span></label>
+            <input class="input" id="co-email" name="email" type="email" required autocomplete="email"
+                   inputmode="email" aria-describedby="err-co-email">
+            <span class="form-error" id="err-co-email" data-error-for="co-email" role="alert"></span>
+            <span class="form-hint">Aquí te enviaremos la confirmación del pedido.</span>
           </div>
         </div>
+
         <div class="form-row">
           <div class="form-field">
-            <label class="form-label" for="co-phone">Teléfono <span class="req">*</span></label>
-            <input class="input" id="co-phone" name="phone" required autocomplete="tel" inputmode="tel">
-            <span class="form-error" data-error-for="co-phone"></span>
+            <label class="form-label" for="co-phone">Teléfono <span class="req" aria-hidden="true">*</span></label>
+            <input class="input" id="co-phone" name="phone" required autocomplete="tel"
+                   inputmode="tel" placeholder="+56 9 1234 5678" aria-describedby="err-co-phone">
+            <span class="form-error" id="err-co-phone" data-error-for="co-phone" role="alert"></span>
           </div>
           <div class="form-field">
-            <label class="form-label" for="co-address">Dirección de envío <span class="req">*</span></label>
-            <input class="input" id="co-address" name="address" required autocomplete="street-address">
-            <span class="form-error" data-error-for="co-address"></span>
+            <label class="form-label" for="co-rut">RUT <span class="opt">(opcional)</span></label>
+            <input class="input" id="co-rut" name="rut" autocomplete="off"
+                   placeholder="12.345.678-9" aria-describedby="err-co-rut">
+            <span class="form-error" id="err-co-rut" data-error-for="co-rut" role="alert"></span>
+            <span class="form-hint">Para la boleta electrónica.</span>
           </div>
         </div>
 
-        <div style="background:var(--bg-elevated);border-radius:var(--r-md);padding:var(--sp-4);margin-top:var(--sp-2)">
-          <div class="cart-line"><span>Subtotal</span><span>${money(subtotal)}</span></div>
-          <div class="cart-line"><span>Envío</span><span>${shipping === 0 ? "Gratis 🎉" : money(shipping)}</span></div>
-          <div class="cart-line cart-line--total"><span>Total</span><span>${money(total)}</span></div>
+        ${deliveryBlock}
+
+        <div class="form-field" id="address-field">
+          <label class="form-label" for="co-address">Dirección de envío <span class="req" aria-hidden="true">*</span></label>
+          <input class="input" id="co-address" name="address" required autocomplete="street-address"
+                 placeholder="Calle, número, depto." aria-describedby="err-co-address">
+          <span class="form-error" id="err-co-address" data-error-for="co-address" role="alert"></span>
         </div>
 
-        <p style="font-size:.78rem;color:var(--text-muted);display:flex;gap:var(--sp-2);align-items:flex-start">
-          <span aria-hidden="true">🔒</span>
-          <span>Serás redirigido a la pasarela de pago segura. Tus datos de tarjeta nunca pasan por nuestros servidores.</span>
-        </p>
+        <div class="form-field">
+          <label class="form-label" for="co-notes">Comentarios <span class="opt">(opcional)</span></label>
+          <textarea class="input" id="co-notes" name="notes" rows="2"
+                    placeholder="Referencias de entrega, horario preferido, etc."></textarea>
+        </div>
+
+        <div class="summary">
+          <div class="cart-line"><span>Subtotal (${items.reduce((s,i)=>s+i.quantity,0)} productos)</span><span>${money(subtotal)}</span></div>
+          <div class="cart-line"><span>Envío</span><span id="co-shipping">${shipping === 0 ? "Gratis 🎉" : money(shipping)}</span></div>
+          <div class="cart-line cart-line--total"><span>Total a pagar</span><span id="co-total">${money(total)}</span></div>
+          <p class="summary__note">IVA incluido. Precio válido para transferencia o débito.</p>
+        </div>
+
+        ${modeNotice}
       </form>`,
-      `<button class="btn btn--secondary" data-close-modal>Cancelar</button>
+      `<button class="btn btn--secondary" data-close-modal>Volver al carrito</button>
        <button class="btn btn--primary btn--lg" id="btn-pay" type="submit" form="checkout-form">
-         🔒 Ir a pagar ${money(total)}
+         ${gateway ? `🔒 Pagar ${money(total)}` : `📋 Enviar orden de compra`}
        </button>`
     );
+
+    // Mostrar/ocultar dirección según el modo de entrega elegido
+    const addrField = $("#address-field");
+    const syncDelivery = () => {
+      const mode = form_value("delivery") || "shipping";
+      const isPickup = mode === "pickup";
+      if (addrField) addrField.hidden = isPickup;
+      const addrInput = $("#co-address");
+      if (addrInput) {
+        addrInput.required = !isPickup;
+        if (isPickup) {
+          addrInput.removeAttribute("aria-invalid");
+          addrInput.closest(".form-field")?.classList.remove("is-invalid");
+        }
+      }
+      const shipEl = $("#co-shipping");
+      const totEl = $("#co-total");
+      const ship = isPickup ? 0 : shippingFor(subtotal);
+      if (shipEl) shipEl.textContent = isPickup ? "Retiro en tienda (sin costo)" : (ship === 0 ? "Gratis 🎉" : money(ship));
+      if (totEl) totEl.textContent = money(subtotal + ship);
+      const payBtn = $("#btn-pay");
+      if (payBtn) {
+        const t = subtotal + ship;
+        payBtn.textContent = gateway ? `🔒 Pagar ${money(t)}` : `📋 Enviar orden de compra`;
+      }
+    };
+    $$('input[name="delivery"]').forEach(r => r.addEventListener("change", syncDelivery));
+    syncDelivery();
+  }
+
+  // Helper: lee el valor de un campo del formulario de checkout por nombre
+  function form_value(name) {
+    const el = document.querySelector(`#checkout-form [name="${name}"]:checked`)
+            || document.querySelector(`#checkout-form [name="${name}"]`);
+    return el ? el.value : null;
   }
 
   async function submitCheckout(e) {
@@ -729,17 +923,24 @@
     const form = e.target;
     const data = Object.fromEntries(new FormData(form));
 
+    const mode = data.delivery || "shipping";
+    const isPickup = mode === "pickup";
+
     // Validación en cliente con mensajes accesibles
     let valid = true;
     const rules = {
       name: v => v.trim().length >= 3 || "Ingresa tu nombre completo",
-      email: v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) || "Email inválido",
-      phone: v => v.replace(/\D/g, "").length >= 8 || "Teléfono inválido",
-      address: v => v.trim().length >= 6 || "Ingresa una dirección válida",
+      email: v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) || "Ingresa un email válido",
+      phone: v => v.replace(/\D/g, "").length >= 8 || "Ingresa un teléfono válido (mínimo 8 dígitos)",
     };
+    if (!isPickup) {
+      rules.address = v => v.trim().length >= 6 || "Ingresa una dirección válida";
+    }
+
     $$(".form-field", form).forEach(f => f.classList.remove("is-invalid"));
     for (const [field, rule] of Object.entries(rules)) {
       const input = form.elements[field];
+      if (!input) continue;
       const result = rule(input.value || "");
       const errEl = $(`[data-error-for="${input.id}"]`);
       if (result !== true) {
@@ -754,57 +955,89 @@
     }
     if (!valid) {
       $(".form-field.is-invalid .input", form)?.focus();
-      toast("Revisa los campos marcados", "warning");
+      toast("Revisa los campos marcados en rojo", "warning");
       return;
     }
 
     const btn = $("#btn-pay");
+    const originalLabel = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Procesando…';
+
+    const gateway = isGatewayEnabled();
+    const storeName = state.config?.modules?.store?.name || "la tienda";
 
     try {
       const order = await API.createOrder({
         customerName: data.name,
         customerEmail: data.email,
         customerPhone: data.phone,
-        shippingAddress: data.address,
+        customerRut: data.rut || null,
+        shippingAddress: isPickup ? null : data.address,
+        deliveryMethod: mode,
+        pickupStore: isPickup ? storeName : null,
+        notes: data.notes || null,
         items: state.cart.items.map(i => ({
           productId: i.productId, quantity: i.quantity, price: i.price, name: i.name,
         })),
         sessionId: API.sessionId(),
       });
 
-      // Intentar sesión de pago real (si la pasarela está configurada)
-      try {
-        const pay = await API.createPaymentSession({
-          items: state.cart.items.map(i => ({
-            name: i.name, price: i.price, quantity: i.quantity,
-          })),
-          customerEmail: data.email,
-          metadata: { orderId: String(order?.order?.id || "") },
-        });
-        if (pay?.url) { window.location.href = pay.url; return; }
-      } catch (payErr) {
-        console.warn("Pasarela no disponible:", payErr.message);
+      const orderNumber = order?.order?.orderNumber || order?.order?.id || "—";
+
+      // ─── Con pasarela: redirigir al pago ───
+      if (gateway) {
+        try {
+          const pay = await API.createPaymentSession({
+            items: state.cart.items.map(i => ({
+              name: i.name, price: i.price, quantity: i.quantity,
+            })),
+            customerEmail: data.email,
+            metadata: { orderId: String(order?.order?.id || "") },
+          });
+          if (pay?.url) { window.location.href = pay.url; return; }
+        } catch (payErr) {
+          console.warn("Pasarela no disponible:", payErr.message);
+          toast("La pasarela no respondió. Tu orden quedó registrada igualmente.", "warning", 7000);
+        }
       }
 
+      // ─── Sin pasarela: orden de compra confirmada ───
       closeModal();
       await API.clearCart();
       await refreshCart();
-      toast("¡Pedido registrado! Te contactaremos para coordinar el pago.", "success", 7000);
+
+      if (gateway) {
+        toast("¡Pedido registrado! Te contactaremos para coordinar el pago.", "success", 7000);
+      } else {
+        toast("¡Orden de compra enviada! Te contactaremos a la brevedad.", "success", 7000);
+      }
+
       openModal(
-        "Pedido confirmado",
+        gateway ? "Pedido confirmado" : "Orden de compra enviada",
         `<div class="state">
           <div class="state__icon" aria-hidden="true">✅</div>
-          <p class="state__title">¡Gracias por tu compra!</p>
-          <p>Pedido <strong>#${esc(order?.order?.orderNumber || order?.order?.id || "—")}</strong></p>
-          <p style="margin-top:var(--sp-3)">Recibirás un email con los detalles y el seguimiento del envío.</p>
+          <p class="state__title">${gateway ? "¡Gracias por tu compra!" : "¡Recibimos tu pedido!"}</p>
+          <p>Número de orden: <strong>#${esc(orderNumber)}</strong></p>
+
+          <div class="receipt">
+            <div class="receipt__row"><span>Productos</span><span>${state.cart.items?.length || 0}</span></div>
+            <div class="receipt__row"><span>Entrega</span><span>${isPickup ? `Retiro en ${esc(storeName)}` : "Despacho a domicilio"}</span></div>
+            <div class="receipt__row"><span>Contacto</span><span>${esc(data.email)}</span></div>
+          </div>
+
+          <p class="notice notice--info" style="text-align:left;margin-top:var(--sp-4)">
+            <span aria-hidden="true">${gateway ? "🔒" : "📞"}</span>
+            <span>${gateway
+              ? "Recibirás un email con la confirmación del pago y el seguimiento del envío."
+              : `Un ejecutivo te contactará a <strong>${esc(data.email)}</strong> o al <strong>${esc(data.phone)}</strong> para coordinar el pago y la entrega. No se realizó ningún cargo.`}</span>
+          </p>
         </div>`,
         `<button class="btn btn--primary" data-close-modal>Entendido</button>`
       );
     } catch (err) {
       btn.disabled = false;
-      btn.innerHTML = "🔒 Reintentar pago";
+      btn.innerHTML = originalLabel;
       toast(err.message || "No se pudo procesar el pedido", "error");
     }
   }
@@ -1083,6 +1316,11 @@
     $("#year").textContent = new Date().getFullYear();
     bindEvents();
     startTopbarRotation();
+
+    // La configuración del sitio se carga PRIMERO: define si el módulo de
+    // tienda está activo, el modo del carrito y los costos de envío reales.
+    await loadSiteConfig();
+
     loadStores();
 
     // Todas las secciones se cargan en paralelo: si una falla, el resto sigue
@@ -1101,7 +1339,8 @@
     setInterval(refreshCart, 120000);
 
     console.log("%c🎮 TecnoGamer", "color:#10b981;font-weight:bold;font-size:14px",
-      "— storefront listo");
+      "— storefront listo",
+      state.config ? `(modo carrito: ${state.config.modules?.payment?.cartMode || "?"})` : "");
   }
 
   document.addEventListener("DOMContentLoaded", init);

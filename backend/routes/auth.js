@@ -72,7 +72,7 @@ function storeRefreshToken(userId, refreshToken, ip, userAgent) {
 
   db.prepare(
     `INSERT INTO auth_tokens (user_id, token, type, expires_at, ip_address, user_agent)
-     VALUES (?, ?, 'refresh', ?, ?, ?)`
+     VALUES (?, ?, 'refresh', datetime(?), ?, ?)`
   ).run(userId, refreshToken, expiresAt.toISOString(), ip, userAgent);
 }
 
@@ -448,7 +448,7 @@ router.post("/forgot-password", sanitize, [
 
     db.prepare(
       `INSERT INTO auth_tokens (user_id, token, type, expires_at)
-       VALUES (?, ?, 'reset', ?)`
+       VALUES (?, ?, 'reset', datetime(?))`
     ).run(user.id, resetToken, expiresAt.toISOString());
 
     // Log

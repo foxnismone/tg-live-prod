@@ -157,7 +157,8 @@
   /* ─── Navegación ─────────────────────────────────────── */
   const TITLES = {
     dashboard: "Resumen", products: "Productos", "new-product": "Nuevo producto",
-    inventory: "Inventario", orders: "Pedidos", chat: "Chat de ventas", settings: "Configuración",
+    inventory: "Inventario", orders: "Pedidos", chat: "Chat de ventas",
+    repairs: "Taller — Órdenes de reparación", settings: "Configuración",
   };
 
   async function navigate(view) {
@@ -176,6 +177,7 @@
       if (view === "inventory")  await renderInventory();
       if (view === "orders")     await renderOrders();
       if (view === "chat")       await renderChat();
+      if (view === "repairs")    await renderRepairs();
       if (view === "settings")   await renderSettings();
     } catch (err) {
       c.innerHTML = `<div class="state">
@@ -954,6 +956,588 @@
     `;
   }
 
+  /* ─── Taller / Reparaciones ──────────────────────────── */
+  const REPAIR_STATUSES = [
+    { key: "", label: "Todos" },
+    { key: "received", label: "📥 Recibido" },
+    { key: "diagnosing", label: "🔍 En diagnóstico" },
+    { key: "waiting_parts", label: "📦 Esperando repuestos" },
+    { key: "in_repair", label: "🔧 En reparación" },
+    { key: "testing", label: "🧪 En pruebas" },
+    { key: "ready", label: "✅ Listo para retiro" },
+    { key: "delivered", label: "🎉 Entregado" },
+    { key: "unrepairable", label: "⚠️ No reparable" },
+    { key: "cancelled", label: "🚫 Cancelado" },
+  ];
+
+  async function renderRepairs() {
+    let data = { repairs: [], pagination: { total: 0 } };
+    let stats = {};
+    let alerts = { alerts: [], unreadCount: 0 };
+
+    try {
+      const [r, s, a] = await Promise.all([
+        api("/admin/repairs?limit=100"),
+        api("/admin/repairs/stats"),
+        api("/admin/repairs-alerts"),
+      ]);
+      data = r; stats = s.stats || {}; alerts = a;
+    } catch (err) {
+      toast(err.message || "No se pudo cargar el taller", "error");
+    }
+
+    const repairs = data.repairs || [];
+
+    const sevIcon = { critical: "🔴", warning: "🟠", info: "🔵" };
+
+    $("#admin-content").innerHTML = `
+      <div class="stats-grid" style="margin-bottom:var(--sp-4)">
+        ${[
+          ["Órdenes activas", stats.active || 0, "🔧"],
+          ["Listas para retiro", stats.ready || 0, "✅"],
+          ["Urgentes", stats.urgent || 0, "⚡"],
+          ["Entregadas este mes", stats.deliveredThisMonth || 0, "🎉"],
+          ["Consultas hoy", stats.lookupsToday || 0, "👁️"],
+          ["Alertas sin leer", stats.unreadAlerts || 0, "🔔"],
+        ].map(([label, val, icon]) => `
+          <div class="stat-card">
+            <div class="stat-card__icon" aria-hidden="true">${icon}</div>
+            <div class="stat-card__val">${val}</div>
+            <div class="stat-card__label">${label}</div>
+          </div>`).join("")}
+      </div>
+
+      ${(alerts.alerts || []).length ? `
+        <div class="panel" style="border-left:4px solid var(--warning,#f59e0b)">
+          <div class="panel__head">
+            <span class="panel__title">🔔 Alertas del taller (${alerts.unreadCount})</span>
+            <button class="btn btn--ghost btn--sm" id="btn-read-all-alerts">Marcar todas leídas</button>
+          </div>
+          <div class="panel__body">
+            <div style="display:grid;gap:var(--sp-2)">
+              ${alerts.alerts.slice(0, 10).map(a => `
+                <div class="alert-row" data-alert="${a.id}">
+                  <span aria-hidden="true">${sevIcon[a.severity] || "🔵"}</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:.86rem">${esc(a.message)}</div>
+                    <div class="cell-sub" style="font-size:.76rem">
+                      ${a.workOrder ? "Orden " + esc(a.workOrder) + " · " : ""}
+                      ${a.customerName ? esc(a.customerName) + " · " : ""}
+                      ${a.customerPhone ? esc(a.customerPhone) + " · " : ""}
+                      ${fmtDate(a.createdAt)}
+                    </div>
+                  </div>
+                  <button class="btn btn--ghost btn--sm" data-read-alert="${a.id}">Leída</button>
+                </div>`).join("")}
+            </div>
+          </div>
+        </div>` : ""}
+
+      <div class="panel">
+        <div class="panel__head">
+          <span class="panel__title">Órdenes de reparación (${data.pagination?.total || 0})</span>
+          <button class="btn btn--primary btn--sm" id="btn-new-repair">+ Nueva orden</button>
+        </div>
+        <div class="panel__body">
+          <div class="filters" style="margin-bottom:var(--sp-3)">
+            <input class="input" id="rep-search" placeholder="Buscar por orden, RUT, serie, nombre o modelo…"
+                   style="flex:1;min-width:220px" autocomplete="off">
+            <select class="input" id="rep-status" style="width:auto">
+              ${REPAIR_STATUSES.map(s => `<option value="${s.key}">${s.label}</option>`).join("")}
+            </select>
+          </div>
+
+          <div id="rep-list">
+            ${repairs.length ? repairs.map(r => `
+              <div class="repair-row" data-id="${r.id}" tabindex="0" role="button">
+                <div class="repair-row__main">
+                  <div class="repair-row__wo">${esc(r.workOrder)}</div>
+                  <div class="repair-row__customer">${esc(r.customerName)}</div>
+                  <div class="repair-row__device">
+                    ${esc([r.deviceBrand, r.deviceModel].filter(Boolean).join(" ") || r.deviceType || "—")}
+                    · serie ${esc(r.serialNumber)}
+                  </div>
+                </div>
+                <div class="repair-row__meta">
+                  <span class="pill ${r.priority === "urgent" ? "pill--bad" : r.priority === "high" ? "pill--warn" : ""}">
+                    ${r.priority === "urgent" ? "⚡ Urgente" : r.priority === "high" ? "Alta" : r.priority === "low" ? "Baja" : "Normal"}
+                  </span>
+                  <span class="pill">${esc(r.statusIcon)} ${esc(r.statusLabel)}</span>
+                  ${r.estimatedCost ? `<span class="cell-sub">$${Number(r.estimatedCost).toLocaleString("es-CL")}</span>` : ""}
+                  <span class="cell-sub" style="font-size:.76rem">${fmtDate(r.updatedAt)}</span>
+                </div>
+              </div>`).join("")
+              : `<div class="state">
+                   <div class="state__icon" aria-hidden="true">🛠️</div>
+                   <p class="state__title">Sin órdenes de reparación</p>
+                   <p>Crea la primera orden o espera a que el software de taller las envíe por la API.</p>
+                 </div>`}
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel__head">
+          <span class="panel__title">🔑 Claves de API del taller</span>
+          <button class="btn btn--secondary btn--sm" id="btn-new-key">+ Nueva clave</button>
+        </div>
+        <div class="panel__body">
+          <p class="cell-sub" style="margin-bottom:var(--sp-3);font-size:.84rem">
+            Entrega estas claves a tu software de gestión de taller para que suba los estados
+            automáticamente. El secreto se muestra <strong>una sola vez</strong>.
+          </p>
+          <div id="keys-list">Cargando…</div>
+        </div>
+      </div>
+    `;
+
+    /* ─── Filtros ─── */
+    const applyFilters = async () => {
+      const search = $("#rep-search")?.value.trim() || "";
+      const status = $("#rep-status")?.value || "";
+      const qs = new URLSearchParams();
+      if (search) qs.set("search", search);
+      if (status) qs.set("status", status);
+      qs.set("limit", "100");
+
+      try {
+        const res = await api(`/admin/repairs?${qs}`);
+        const list = res.repairs || [];
+        $("#rep-list").innerHTML = list.length ? list.map(r => `
+          <div class="repair-row" data-id="${r.id}" tabindex="0" role="button">
+            <div class="repair-row__main">
+              <div class="repair-row__wo">${esc(r.workOrder)}</div>
+              <div class="repair-row__customer">${esc(r.customerName)}</div>
+              <div class="repair-row__device">
+                ${esc([r.deviceBrand, r.deviceModel].filter(Boolean).join(" ") || r.deviceType || "—")}
+                · serie ${esc(r.serialNumber)}
+              </div>
+            </div>
+            <div class="repair-row__meta">
+              <span class="pill ${r.priority === "urgent" ? "pill--bad" : r.priority === "high" ? "pill--warn" : ""}">
+                ${r.priority === "urgent" ? "⚡ Urgente" : r.priority === "high" ? "Alta" : r.priority === "low" ? "Baja" : "Normal"}
+              </span>
+              <span class="pill">${esc(r.statusIcon)} ${esc(r.statusLabel)}</span>
+              <span class="cell-sub" style="font-size:.76rem">${fmtDate(r.updatedAt)}</span>
+            </div>
+          </div>`).join("")
+          : `<div class="state"><p>Sin resultados para ese filtro.</p></div>`;
+        bindRows();
+      } catch (err) { toast(err.message, "error"); }
+    };
+
+    let searchTimer;
+    $("#rep-search")?.addEventListener("input", () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(applyFilters, 350);
+    });
+    $("#rep-status")?.addEventListener("change", applyFilters);
+
+    /* ─── Abrir detalle ─── */
+    function bindRows() {
+      $$(".repair-row").forEach(row => {
+        const open = () => openRepairDetail(Number(row.dataset.id));
+        row.addEventListener("click", open);
+        row.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+        });
+      });
+    }
+    bindRows();
+
+    /* ─── Alertas ─── */
+    $("#btn-read-all-alerts")?.addEventListener("click", async () => {
+      try {
+        await api("/admin/repairs-alerts/read-all", { method: "POST" });
+        toast("Alertas marcadas como leídas ✓", "success");
+        await renderRepairs();
+      } catch (err) { toast(err.message, "error"); }
+    });
+
+    $$("[data-read-alert]").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        try {
+          await api(`/admin/repairs-alerts/${btn.dataset.readAlert}/read`, { method: "POST" });
+          btn.closest(".alert-row")?.remove();
+          toast("Alerta marcada como leída ✓", "success");
+        } catch (err) { toast(err.message, "error"); }
+      });
+    });
+
+    /* ─── Nueva orden ─── */
+    $("#btn-new-repair")?.addEventListener("click", () => openRepairForm());
+
+    /* ─── Claves ─── */
+    loadKeys();
+
+    async function loadKeys() {
+      try {
+        const res = await api("/admin/repair-keys");
+        const keys = res.keys || [];
+        $("#keys-list").innerHTML = keys.length ? `
+          <div style="display:grid;gap:var(--sp-2)">
+            ${keys.map(k => `
+              <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);
+                          background:var(--bg-elevated,var(--bg-surface));border-radius:var(--r-md);
+                          border:1px solid var(--border-light)">
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:600;font-size:.88rem">${esc(k.name)}</div>
+                  <div class="cell-sub" style="font-size:.76rem">
+                    <code>${esc(k.keyPrefix)}…</code> · ${esc(k.scopes)}
+                    · ${k.lastUsedAt ? "último uso " + fmtDate(k.lastUsedAt) : "nunca usada"}
+                  </div>
+                </div>
+                <span class="pill ${k.isActive ? "pill--ok" : "pill--bad"}">${k.isActive ? "Activa" : "Revocada"}</span>
+                ${k.isActive ? `<button class="btn btn--ghost btn--sm" data-revoke="${k.id}">Revocar</button>` : ""}
+              </div>`).join("")}
+          </div>` : `<p class="cell-sub">No hay claves. Crea una para conectar tu software de taller.</p>`;
+
+        $$("[data-revoke]").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const ok = await confirmDialog("Revocar clave",
+              "El software que use esta clave dejará de poder subir estados. ¿Continuar?", "Revocar", true);
+            if (!ok) return;
+            try {
+              await api(`/admin/repair-keys/${btn.dataset.revoke}`, { method: "DELETE" });
+              toast("Clave revocada ✓", "success");
+              loadKeys();
+            } catch (err) { toast(err.message, "error"); }
+          });
+        });
+      } catch (err) {
+        $("#keys-list").innerHTML = `<p class="cell-sub">No se pudieron cargar las claves.</p>`;
+      }
+    }
+
+    $("#btn-new-key")?.addEventListener("click", () => {
+      openModal("Nueva clave de API",
+        `<div class="form">
+          <div class="form-field">
+            <label class="form-label" for="key-name">Nombre del software</label>
+            <input class="input" id="key-name" placeholder="Sistema de taller / POS / Script de importación">
+            <span class="form-hint">Sirve para identificar qué sistema usa esta clave.</span>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Permisos</label>
+            <label style="display:flex;gap:8px;align-items:center;font-size:.88rem;margin-bottom:6px">
+              <input type="checkbox" id="key-read" checked> Leer órdenes y alertas
+            </label>
+            <label style="display:flex;gap:8px;align-items:center;font-size:.88rem">
+              <input type="checkbox" id="key-write" checked> Crear órdenes y subir estados
+            </label>
+          </div>
+        </div>`,
+        `<button class="btn btn--secondary" data-close-modal>Cancelar</button>
+         <button class="btn btn--primary" id="btn-create-key">Crear clave</button>`
+      );
+
+      $("#btn-create-key")?.addEventListener("click", async () => {
+        const name = $("#key-name")?.value.trim();
+        if (!name) { toast("Escribe un nombre", "warning"); return; }
+
+        const scopes = [];
+        if ($("#key-read")?.checked) scopes.push("repairs:read");
+        if ($("#key-write")?.checked) scopes.push("repairs:write");
+        if (!scopes.length) { toast("Selecciona al menos un permiso", "warning"); return; }
+
+        try {
+          const res = await api("/admin/repair-keys", { method: "POST", body: { name, scopes } });
+
+          // Mostrar la clave UNA vez, con botón de copiar
+          openModal("✅ Clave creada",
+            `<div class="notice notice--warn" style="margin-bottom:var(--sp-3)">
+              <span aria-hidden="true">⚠️</span>
+              <span>Guarda esta clave <strong>ahora</strong>. No se puede recuperar después:
+              el servidor solo almacena su hash.</span>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Clave de API</label>
+              <div style="display:flex;gap:8px">
+                <input class="input" id="new-key-value" value="${esc(res.key)}" readonly
+                       style="font-family:monospace;font-size:.82rem">
+                <button class="btn btn--secondary" id="btn-copy-key">Copiar</button>
+              </div>
+              <span class="form-hint">Úsala en la cabecera <code>X-API-Key</code> de tus peticiones.</span>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Ejemplo de uso</label>
+              <pre style="background:var(--bg-base);padding:var(--sp-3);border-radius:var(--r-md);
+                          font-size:.75rem;overflow-x:auto;margin:0">curl -X POST ${location.origin}/api/v1/repairs-api/orders \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: ${esc(res.key)}" \\
+  -d '{"rut":"12.345.678-5","serialNumber":"SN-123",
+       "customerName":"Juan Pérez","status":"received"}'</pre>
+            </div>`,
+            `<button class="btn btn--primary" data-close-modal>Entendido</button>`
+          );
+
+          $("#btn-copy-key")?.addEventListener("click", () => {
+            const input = $("#new-key-value");
+            input.select();
+            navigator.clipboard?.writeText(input.value).then(
+              () => toast("Clave copiada ✓", "success"),
+              () => toast("Copia manualmente con Ctrl+C", "info")
+            );
+          });
+
+          loadKeys();
+        } catch (err) { toast(err.message, "error"); }
+      });
+    });
+  }
+
+  /* ─── Detalle de una orden de reparación ─────────────── */
+  async function openRepairDetail(id) {
+    try {
+      const res = await api(`/admin/repairs/${id}`);
+      const r = res.repair;
+      const events = res.events || [];
+      const lookups = res.lookups || [];
+
+      const lookupSummary = lookups.length
+        ? `${lookups.length} consultas del cliente (${lookups.filter(l => !l.success).length} fallidas)`
+        : "El cliente aún no ha consultado esta orden";
+
+      openModal(`Orden ${r.workOrder}`,
+        `<div style="display:grid;gap:var(--sp-4)">
+          <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap">
+            <span class="pill">${esc(r.statusIcon)} ${esc(r.statusLabel)}</span>
+            <span class="pill ${r.priority === "urgent" ? "pill--bad" : r.priority === "high" ? "pill--warn" : ""}">
+              ${r.priority === "urgent" ? "⚡ Urgente" : r.priority === "high" ? "Alta" : r.priority === "low" ? "Baja" : "Normal"}
+            </span>
+            <span class="pill">${r.source === "api" ? "🤖 Vía API" : "✍️ Manual"}</span>
+          </div>
+
+          <div class="detail-grid">
+            <div><span class="cell-sub">Cliente</span><strong>${esc(r.customerName)}</strong></div>
+            <div><span class="cell-sub">RUT</span><strong>${esc(r.rut)}</strong></div>
+            <div><span class="cell-sub">Email</span><strong>${esc(r.customerEmail || "—")}</strong></div>
+            <div><span class="cell-sub">Teléfono</span><strong>${esc(r.customerPhone || "—")}</strong></div>
+            <div><span class="cell-sub">Equipo</span><strong>${esc([r.deviceBrand, r.deviceModel].filter(Boolean).join(" ") || "—")}</strong></div>
+            <div><span class="cell-sub">N° de serie</span><strong>${esc(r.serialNumber)}</strong></div>
+            <div><span class="cell-sub">Técnico</span><strong>${esc(r.technician || "sin asignar")}</strong></div>
+            <div><span class="cell-sub">Recibido</span><strong>${fmtDate(r.receivedAt)}</strong></div>
+            ${r.promisedAt ? `<div><span class="cell-sub">Entrega prometida</span><strong>${fmtDate(r.promisedAt)}</strong></div>` : ""}
+            ${r.deliveredAt ? `<div><span class="cell-sub">Entregado</span><strong>${fmtDate(r.deliveredAt)}</strong></div>` : ""}
+            <div><span class="cell-sub">Costo estimado</span><strong>$${Number(r.estimatedCost || 0).toLocaleString("es-CL")}</strong></div>
+            <div><span class="cell-sub">Costo final</span><strong>$${Number(r.finalCost || 0).toLocaleString("es-CL")}</strong></div>
+          </div>
+
+          ${r.reportedIssue ? `<div><span class="cell-sub">Falla reportada</span><p style="margin:4px 0 0;font-size:.86rem">${esc(r.reportedIssue)}</p></div>` : ""}
+          ${r.diagnosis ? `<div><span class="cell-sub">Diagnóstico</span><p style="margin:4px 0 0;font-size:.86rem">${esc(r.diagnosis)}</p></div>` : ""}
+
+          <div>
+            <span class="cell-sub">Actividad del cliente</span>
+            <p style="margin:4px 0 0;font-size:.85rem">${lookupSummary}</p>
+          </div>
+
+          <div>
+            <span class="cell-sub">Historial de estados (${events.length})</span>
+            <div style="margin-top:8px;display:grid;gap:8px;max-height:240px;overflow-y:auto">
+              ${events.map(e => `
+                <div style="padding:8px 10px;background:var(--bg-elevated,var(--bg-surface));
+                            border-radius:var(--r-sm,6px);border-left:3px solid var(--brand)">
+                  <div style="font-size:.85rem;font-weight:600">${esc(e.statusLabel)}</div>
+                  ${e.note ? `<div style="font-size:.82rem;color:var(--text-secondary)">${esc(e.note)}</div>` : ""}
+                  ${e.internalNote ? `<div style="font-size:.78rem;color:var(--text-muted);font-style:italic">Interno: ${esc(e.internalNote)}</div>` : ""}
+                  <div class="cell-sub" style="font-size:.74rem">
+                    ${fmtDate(e.date)} · ${esc(e.createdBy)}${e.technician ? " · " + esc(e.technician) : ""}
+                  </div>
+                </div>`).join("")}
+            </div>
+          </div>
+        </div>`,
+        `<button class="btn btn--secondary" data-close-modal>Cerrar</button>
+         <button class="btn btn--primary" id="btn-add-event">Añadir estado</button>`
+      );
+
+      $("#btn-add-event")?.addEventListener("click", () => openEventForm(r));
+
+    } catch (err) {
+      toast(err.message || "No se pudo abrir la orden", "error");
+    }
+  }
+
+  /* ─── Formulario de nuevo estado ─────────────────────── */
+  function openEventForm(repair) {
+    openModal(`Nuevo estado — ${repair.workOrder}`,
+      `<div class="form">
+        <div class="form-field">
+          <label class="form-label" for="ev-status">Estado</label>
+          <select class="input" id="ev-status">
+            ${REPAIR_STATUSES.filter(s => s.key).map(s =>
+              `<option value="${s.key}" ${s.key === repair.status ? "selected" : ""}>${s.label}</option>`).join("")}
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="ev-note">Comentario para el cliente</label>
+          <textarea class="input" id="ev-note" rows="2"
+                    placeholder="Lo que verá el cliente en el seguimiento."></textarea>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="ev-internal">Nota interna <span class="opt">(no la ve el cliente)</span></label>
+          <textarea class="input" id="ev-internal" rows="2"
+                    placeholder="Detalle solo para el taller."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="ev-tech">Técnico</label>
+            <input class="input" id="ev-tech" value="${esc(repair.technician || "")}">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="ev-cost">Costo final</label>
+            <input class="input" id="ev-cost" type="number" min="0" value="${Number(repair.finalCost || 0)}">
+          </div>
+        </div>
+      </div>`,
+      `<button class="btn btn--secondary" data-close-modal>Cancelar</button>
+       <button class="btn btn--primary" id="btn-save-event">Guardar estado</button>`
+    );
+
+    $("#btn-save-event")?.addEventListener("click", async () => {
+      const body = {
+        status: $("#ev-status")?.value,
+        note: $("#ev-note")?.value.trim() || undefined,
+        internalNote: $("#ev-internal")?.value.trim() || undefined,
+        technician: $("#ev-tech")?.value.trim() || undefined,
+        finalCost: Number($("#ev-cost")?.value) || 0,
+      };
+
+      try {
+        await api(`/admin/repairs/${repair.id}/events`, { method: "POST", body });
+        toast("Estado registrado ✓", "success");
+        closeModal();
+        await renderRepairs();
+      } catch (err) { toast(err.message, "error"); }
+    });
+  }
+
+  /* ─── Formulario de nueva orden ──────────────────────── */
+  function openRepairForm() {
+    openModal("Nueva orden de reparación",
+      `<div class="form">
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="nr-name">Nombre del cliente <span class="req">*</span></label>
+            <input class="input" id="nr-name" required>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="nr-rut">RUT <span class="req">*</span></label>
+            <input class="input" id="nr-rut" placeholder="12.345.678-9">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="nr-email">Email</label>
+            <input class="input" id="nr-email" type="email">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="nr-phone">Teléfono</label>
+            <input class="input" id="nr-phone" placeholder="+56 9 1234 5678">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="nr-type">Tipo de equipo</label>
+            <input class="input" id="nr-type" placeholder="Notebook, PC, consola…">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="nr-serial">N° de serie <span class="req">*</span></label>
+            <input class="input" id="nr-serial" placeholder="SN-ABC123">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="nr-brand">Marca</label>
+            <input class="input" id="nr-brand">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="nr-model">Modelo</label>
+            <input class="input" id="nr-model">
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="nr-issue">Falla reportada</label>
+          <textarea class="input" id="nr-issue" rows="2" placeholder="Lo que describe el cliente."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="nr-priority">Prioridad</label>
+            <select class="input" id="nr-priority">
+              <option value="normal">Normal</option>
+              <option value="low">Baja</option>
+              <option value="high">Alta</option>
+              <option value="urgent">⚡ Urgente</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="nr-tech">Técnico</label>
+            <input class="input" id="nr-tech">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="nr-est">Costo estimado</label>
+            <input class="input" id="nr-est" type="number" min="0" value="0">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="nr-warranty">Garantía (días)</label>
+            <input class="input" id="nr-warranty" type="number" min="0" value="90">
+          </div>
+        </div>
+      </div>`,
+      `<button class="btn btn--secondary" data-close-modal>Cancelar</button>
+       <button class="btn btn--primary" id="btn-save-repair">Crear orden</button>`
+    );
+
+    $("#btn-save-repair")?.addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      const body = {
+        customerName: $("#nr-name")?.value.trim(),
+        rut: $("#nr-rut")?.value.trim(),
+        serialNumber: $("#nr-serial")?.value.trim(),
+        customerEmail: $("#nr-email")?.value.trim() || undefined,
+        customerPhone: $("#nr-phone")?.value.trim() || undefined,
+        deviceType: $("#nr-type")?.value.trim() || undefined,
+        deviceBrand: $("#nr-brand")?.value.trim() || undefined,
+        deviceModel: $("#nr-model")?.value.trim() || undefined,
+        reportedIssue: $("#nr-issue")?.value.trim() || undefined,
+        priority: $("#nr-priority")?.value,
+        technician: $("#nr-tech")?.value.trim() || undefined,
+        estimatedCost: Number($("#nr-est")?.value) || 0,
+        warrantyDays: Number($("#nr-warranty")?.value) || 90,
+      };
+
+      if (!body.customerName || !body.rut || !body.serialNumber) {
+        toast("Nombre, RUT y número de serie son obligatorios", "warning");
+        return;
+      }
+
+      btn.disabled = true;
+      try {
+        const res = await api("/admin/repairs", { method: "POST", body });
+        toast(`Orden ${res.repair.workOrder} creada ✓`, "success");
+        closeModal();
+        await renderRepairs();
+      } catch (err) {
+        toast(err.details ? err.details.join(" · ") : (err.message || "No se pudo crear la orden"), "error");
+      } finally { btn.disabled = false; }
+    });
+  }
+
+  /* ─── Utilidad de fecha ──────────────────────────────── */
+  function fmtDate(iso) {
+    if (!iso) return "—";
+    try {
+      const d = new Date(String(iso).replace(" ", "T") + (String(iso).includes("Z") ? "" : "Z"));
+      return d.toLocaleString("es-CL", {
+        day: "2-digit", month: "2-digit", year: "2-digit",
+        hour: "2-digit", minute: "2-digit",
+      });
+    } catch (_) { return iso; }
+  }
+
   /* ─── Chat ───────────────────────────────────────────── */
   async function renderChat() {
     let sessions = [];
@@ -990,11 +1574,106 @@
   async function renderSettings() {
     let info = {};
     try { info = await api("/system/info"); } catch (_) {}
+    let settings = {};
+    try {
+      const r = await api("/admin/settings");
+      settings = r.settings || {};
+    } catch (_) {}
 
     const f = info.features || {};
     const flag = (ok, label) => `<span class="tag ${ok ? "tag--ok" : "tag--bad"}">${ok ? "✓" : "✕"} ${esc(label)}</span>`;
 
+    // Valor booleano de un ajuste ('1'/'true' = activo)
+    const on = (key, def = false) => {
+      const v = settings[key];
+      if (v === undefined || v === "") return def;
+      return v === "1" || v === "true";
+    };
+
+    // Interruptor de módulo: guarda al cambiar
+    const toggle = (key, label, desc, checked) => `
+      <label class="module-toggle">
+        <input type="checkbox" class="module-switch" data-setting="${key}"
+               ${checked ? "checked" : ""} role="switch">
+        <span class="module-toggle__body">
+          <span class="module-toggle__title">${esc(label)}</span>
+          <span class="module-toggle__desc">${esc(desc)}</span>
+        </span>
+        <span class="module-toggle__state" aria-hidden="true">${checked ? "Activo" : "Inactivo"}</span>
+      </label>`;
+
+    const storeEnabled = on("store_enabled", false);
+    const pickupEnabled = on("store_pickup_enabled", false);
+    const gatewayEnabled = on("payment_gateway_enabled", false);
+
     $("#admin-content").innerHTML = `
+      <div class="panel">
+        <div class="panel__head">
+          <span class="panel__title">Módulos del sitio</span>
+          <span class="cell-sub">Activa o desactiva funciones en vivo</span>
+        </div>
+        <div class="panel__body">
+          <div class="modules-list">
+            ${toggle("store_enabled", "🏬 Tienda física",
+              "Muestra la dirección, horarios y el retiro en tienda. Al desactivarlo, esas secciones desaparecen del sitio.",
+              storeEnabled)}
+            ${toggle("store_pickup_enabled", "🏬 Retiro en tienda",
+              "Permite elegir «retiro en tienda» en el checkout. Requiere que la tienda física esté activa.",
+              pickupEnabled)}
+            ${toggle("payment_gateway_enabled", "💳 Pasarela de pago",
+              "Desactivada: el carrito funciona como ORDEN DE COMPRA (el cliente envía el pedido y un ejecutivo coordina el pago). Activada: el carrito funciona como CARRO DE COMPRA con pago en línea.",
+              gatewayEnabled)}
+          </div>
+
+          <div class="mode-banner mode-banner--${gatewayEnabled ? "pay" : "order"}">
+            <span class="mode-banner__icon" aria-hidden="true">${gatewayEnabled ? "💳" : "📋"}</span>
+            <div>
+              <strong>Modo actual del carrito: ${gatewayEnabled ? "Carro de compra (pago en línea)" : "Orden de compra"}</strong>
+              <p>${gatewayEnabled
+                ? "Los clientes pagan en línea mediante la pasarela. El pedido queda confirmado automáticamente al aprobarse el pago."
+                : "Los clientes envían su pedido sin pagar. Tú lo recibes en Pedidos, lo contactas y coordinas el pago y la entrega."}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel__head"><span class="panel__title">Datos de la tienda física</span></div>
+        <div class="panel__body">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label" for="set-store-name">Nombre</label>
+              <input class="input" id="set-store-name" data-setting="store_name"
+                     value="${esc(settings.store_name || "")}" placeholder="TecnoGamer San Diego">
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="set-store-phone">Teléfono</label>
+              <input class="input" id="set-store-phone" data-setting="store_phone"
+                     value="${esc(settings.store_phone || "")}" placeholder="+56 2 2560 0040">
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="set-store-address">Dirección</label>
+            <input class="input" id="set-store-address" data-setting="store_address"
+                   value="${esc(settings.store_address || "")}" placeholder="Santiago 965, Local 14, San Diego">
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label" for="set-store-hours">Horario</label>
+              <input class="input" id="set-store-hours" data-setting="store_hours"
+                     value="${esc(settings.store_hours || "")}" placeholder="Lun–Sáb 10:30–19:30">
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="set-pickup-min">Minutos para alistar el retiro</label>
+              <input class="input" id="set-pickup-min" data-setting="store_pickup_ready_minutes"
+                     type="number" min="0" value="${esc(settings.store_pickup_ready_minutes || "90")}">
+              <span class="form-hint">Tiempo que tardas en preparar un pedido para retiro.</span>
+            </div>
+          </div>
+          <button class="btn btn--primary" id="btn-save-store">Guardar datos de la tienda</button>
+        </div>
+      </div>
+
       <div class="panel">
         <div class="panel__head"><span class="panel__title">Estado del sistema</span></div>
         <div class="panel__body">
@@ -1004,9 +1683,6 @@
             </div>
             <div style="display:flex;justify-content:space-between;padding:var(--sp-2) 0;border-bottom:1px solid var(--border)">
               <span class="cell-sub">Versión</span><strong>${esc(info.version || "1.0.0")}</strong>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:var(--sp-2) 0;border-bottom:1px solid var(--border)">
-              <span class="cell-sub">Entorno</span><strong>${esc(info.environment || "development")}</strong>
             </div>
             <div style="display:flex;justify-content:space-between;padding:var(--sp-2) 0;align-items:center">
               <span class="cell-sub">Entorno</span>
@@ -1057,6 +1733,51 @@
         </div>
       </div>
     `;
+
+    /* ─── Guardado de módulos y datos de tienda ─── */
+    const saveSettings = async (payload, okMsg) => {
+      try {
+        await api("/admin/settings", { method: "PUT", body: { settings: payload } });
+        toast(okMsg, "success");
+        return true;
+      } catch (err) {
+        toast(err.message || "No se pudo guardar", "error");
+        return false;
+      }
+    };
+
+    // Interruptores: guardan al cambiar y recargan para reflejar dependencias
+    document.querySelectorAll(".module-switch").forEach(sw => {
+      sw.addEventListener("change", async () => {
+        const key = sw.dataset.setting;
+        const val = sw.checked ? "1" : "0";
+        const payload = { [key]: val };
+
+        // Desactivar la tienda física desactiva también el retiro
+        if (key === "store_enabled" && val === "0") payload.store_pickup_enabled = "0";
+
+        sw.disabled = true;
+        const ok = await saveSettings(payload, sw.checked ? "Módulo activado ✓" : "Módulo desactivado ✓");
+        sw.disabled = false;
+        if (ok) await renderSettings();
+        else sw.checked = !sw.checked;
+      });
+    });
+
+    // Guardar datos de la tienda física
+    $("#btn-save-store")?.addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      const keys = ["store_name", "store_phone", "store_address", "store_hours", "store_pickup_ready_minutes"];
+      const payload = {};
+      for (const k of keys) {
+        const el = document.querySelector(`[data-setting="${k}"]`);
+        if (el) payload[k] = el.value.trim();
+      }
+      btn.disabled = true;
+      const ok = await saveSettings(payload, "Datos de la tienda guardados ✓");
+      btn.disabled = false;
+      if (ok) await renderSettings();
+    });
 
     $("#btn-export")?.addEventListener("click", exportCsv);
     $("#btn-backup")?.addEventListener("click", async () => {

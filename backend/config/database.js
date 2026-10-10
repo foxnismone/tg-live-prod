@@ -349,6 +349,138 @@ CREATE TABLE IF NOT EXISTS auth_tokens (
 CREATE INDEX IF NOT EXISTS idx_auth_tokens_user ON auth_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_auth_tokens_tok  ON auth_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_auth_tokens_exp  ON auth_tokens(expires_at);
+
+-- ─── Tiendas físicas (módulo configurable y desconectable) ───
+-- Va en el SCHEMA (no en el seed) porque el seed solo corre con la
+-- base vacía: una instalación existente nunca crearía la tabla.
+CREATE TABLE IF NOT EXISTS stores (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  code          TEXT NOT NULL UNIQUE,
+  name          TEXT NOT NULL,
+  address       TEXT,
+  city          TEXT,
+  region        TEXT,
+  phone         TEXT,
+  hours         TEXT,
+  latitude      REAL,
+  longitude     REAL,
+  is_pickup     INTEGER NOT NULL DEFAULT 1,
+  is_active     INTEGER NOT NULL DEFAULT 1,
+  sort_order    INTEGER NOT NULL DEFAULT 0,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_stores_active ON stores(is_active);
+CREATE INDEX IF NOT EXISTS idx_stores_pickup ON stores(is_pickup);
+
+-- ─── Taller: órdenes de trabajo (módulo configurable y desconectable) ───
+-- El cliente consulta el estado de su equipo con TRES datos: número de
+-- orden, RUT y número de serie. Los tres deben coincidir para no exponer
+-- el historial de otro cliente.
+CREATE TABLE IF NOT EXISTS repair_orders (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  work_order        TEXT    NOT NULL UNIQUE,     -- ORDEN DE TRABAJO (ej: OT-2026-000123)
+  rut               TEXT    NOT NULL,            -- RUT del cliente (normalizado sin puntos)
+  serial_number     TEXT    NOT NULL,            -- Número de serie del equipo
+  customer_name     TEXT    NOT NULL,            -- Nombre completo
+  customer_email    TEXT,
+  customer_phone    TEXT,
+  device_type       TEXT,                        -- Notebook, PC de escritorio, Consola...
+  device_brand      TEXT,
+  device_model      TEXT,
+  reported_issue    TEXT,                        -- Falla reportada por el cliente
+  diagnosis         TEXT,                        -- Diagnóstico del técnico
+  status            TEXT    NOT NULL DEFAULT 'received'
+                    CHECK(status IN ('received','diagnosing','waiting_parts','in_repair',
+                                     'testing','ready','delivered','cancelled','unrepairable')),
+  priority          TEXT    NOT NULL DEFAULT 'normal'
+                    CHECK(priority IN ('low','normal','high','urgent')),
+  technician        TEXT,
+  estimated_cost    INTEGER DEFAULT 0,           -- En pesos (CLP), sin decimales
+  final_cost        INTEGER DEFAULT 0,
+  warranty_days     INTEGER DEFAULT 90,
+  received_at       TEXT    NOT NULL DEFAULT (datetime('now')),
+  promised_at       TEXT,                        -- Fecha prometida de entrega
+  delivered_at      TEXT,
+  external_ref      TEXT,                        -- ID en el software de taller externo
+  source            TEXT    NOT NULL DEFAULT 'manual'
+                    CHECK(source IN ('manual','api','import')),
+  is_active         INTEGER NOT NULL DEFAULT 1,
+  created_at        TEXT    NOT NULL DEFAULT (datetime('now')),
+  updated_at        TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_repair_wo       ON repair_orders(work_order);
+CREATE INDEX IF NOT EXISTS idx_repair_rut      ON repair_orders(rut);
+CREATE INDEX IF NOT EXISTS idx_repair_serial   ON repair_orders(serial_number);
+CREATE INDEX IF NOT EXISTS idx_repair_status   ON repair_orders(status);
+CREATE INDEX IF NOT EXISTS idx_repair_external ON repair_orders(external_ref);
+
+-- ─── Taller: historial de estados (evolución del equipo) ────
+CREATE TABLE IF NOT EXISTS repair_events (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  repair_id     INTEGER NOT NULL,
+  status        TEXT    NOT NULL,
+  note          TEXT,                            -- Comentario visible al cliente
+  internal_note TEXT,                            -- Nota solo para el taller
+  technician    TEXT,
+  created_by    TEXT    NOT NULL DEFAULT 'system'
+                CHECK(created_by IN ('system','technician','operator','api','customer')),
+  created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (repair_id) REFERENCES repair_orders(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_repair_events_repair ON repair_events(repair_id);
+CREATE INDEX IF NOT EXISTS idx_repair_events_date   ON repair_events(created_at);
+
+-- ─── Taller: consultas del cliente (auditoría + alertas) ────
+-- Registra cada consulta para medir frecuencia y detectar clientes
+-- ansiosos (muchas consultas en poco tiempo) y avisar al equipo.
+CREATE TABLE IF NOT EXISTS repair_lookups (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  repair_id     INTEGER,                         -- NULL si los datos no coincidieron
+  work_order    TEXT,                            -- Lo que el cliente escribió
+  rut_hash      TEXT,                            -- RUT hasheado (nunca en claro)
+  success       INTEGER NOT NULL DEFAULT 0,
+  ip_address    TEXT,
+  user_agent    TEXT,
+  referrer      TEXT,
+  created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (repair_id) REFERENCES repair_orders(id) ON DELETE SET NULL
+);
+CREATE INDEX IF NOT EXISTS idx_repair_lookups_repair ON repair_lookups(repair_id);
+CREATE INDEX IF NOT EXISTS idx_repair_lookups_ip     ON repair_lookups(ip_address);
+CREATE INDEX IF NOT EXISTS idx_repair_lookups_date   ON repair_lookups(created_at);
+
+-- ─── Taller: alertas generadas para el equipo ───────────────
+CREATE TABLE IF NOT EXISTS repair_alerts (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  repair_id     INTEGER,
+  type          TEXT    NOT NULL
+                CHECK(type IN ('frequent_lookup','many_failures','overdue','no_update','cost_question')),
+  severity      TEXT    NOT NULL DEFAULT 'info'
+                CHECK(severity IN ('info','warning','critical')),
+  message       TEXT    NOT NULL,
+  data          TEXT,                            -- JSON con el detalle
+  is_read       INTEGER NOT NULL DEFAULT 0,
+  created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (repair_id) REFERENCES repair_orders(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_repair_alerts_unread ON repair_alerts(is_read);
+CREATE INDEX IF NOT EXISTS idx_repair_alerts_date   ON repair_alerts(created_at);
+
+-- ─── Taller: claves de API para el software externo ─────────
+-- Permite que un software de taller suba estados sin usar la sesión
+-- de un operador. La clave se guarda hasheada (nunca en claro).
+CREATE TABLE IF NOT EXISTS repair_api_keys (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  name          TEXT    NOT NULL,
+  key_hash      TEXT    NOT NULL UNIQUE,         -- SHA-256 de la clave
+  key_prefix    TEXT    NOT NULL,                -- primeros 8 chars, para identificarla
+  scopes        TEXT    NOT NULL DEFAULT 'repairs:read,repairs:write',
+  is_active     INTEGER NOT NULL DEFAULT 1,
+  last_used_at  TEXT,
+  created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_repair_api_keys_hash ON repair_api_keys(key_hash);
 `;
 
 // ─── Initial Data (si está vacío) ───────────────────────────
@@ -432,20 +564,32 @@ INSERT OR IGNORE INTO product_images (product_id, url, alt_text, sort_order, is_
 
 -- Configuración básica del sitio
 INSERT OR IGNORE INTO site_settings (key, value) VALUES
-  ('site_name', 'Mi Tienda Online'),
-  ('site_description', 'Tu tienda de productos seleccionados con la mejor calidad y precios.'),
-  ('currency', 'USD'),
-  ('locale', 'es'),
-  ('contact_email', 'contacto@mitienda.com'),
-  ('support_phone', '+00 000 000 0000'),
-  ('address', 'Calle Principal 123, Ciudad, País'),
-  ('about_text', 'Somos una tienda online dedicada a ofrecer productos de alta calidad.'),
-  ('shipping_flat_rate', '5.99'),
-  ('free_shipping_threshold', '75.00'),
-  ('tax_rate_default', '0'),
+  ('site_name', 'TecnoGamer'),
+  ('site_description', 'Tienda de tecnología, hardware gamer y videojuegos con retiro en tienda.'),
+  ('currency', 'CLP'),
+  ('locale', 'es-CL'),
+  ('contact_email', 'contacto@tecnogamer.cl'),
+  ('support_phone', '+56 2 2560 0040'),
+  ('address', 'Santiago 965, Local 14, San Diego'),
+  ('about_text', 'TecnoGamer es tu tienda de tecnología y gaming. Compra online con despacho a todo Chile o retira en nuestra tienda.'),
+  ('shipping_flat_rate', '5990'),
+  ('free_shipping_threshold', '75000'),
+  ('tax_rate_default', '19'),
   ('return_policy_days', '30'),
   ('chat_welcome_message', '¡Hola! 👋 ¿En qué puedo ayudarte hoy? Puedes preguntarme sobre productos, precios, stock o cualquier otra duda.'),
-  ('maintenance_mode', '0');
+  ('maintenance_mode', '0'),
+  -- ─── Módulo de tienda física (configurable y desconectable) ───
+  ('store_enabled', '1'),
+  ('store_name', 'TecnoGamer San Diego'),
+  ('store_address', 'Santiago 965, Local 14, San Diego'),
+  ('store_hours', 'Lun–Sáb 10:30–19:30'),
+  ('store_phone', '+56 2 2560 0040'),
+  ('store_pickup_enabled', '1'),
+  ('store_pickup_ready_minutes', '90'),
+  -- ─── Módulo de pago (define si el carrito es orden de compra o carro) ───
+  ('payment_gateway_enabled', '0'),
+  ('payment_gateway_provider', ''),
+  ('cart_mode', 'purchase_order');
 `;
 
 // ─── Configuración del módulo (lee entorno con fallbacks) ────
@@ -593,6 +737,58 @@ function runMigrations(db) {
 
   // v8: reseñas — permitir respuestas del operador
   addColumn("reviews", "admin_reply", "TEXT");
+
+  // v9: módulo de tienda física + configuración de módulos del sitio.
+  // La tabla `stores` la crea el SCHEMA; aquí se siembra la tienda única
+  // y las claves de site_settings para instalaciones que ya tienen datos
+  // (el SEED_SQL solo corre con la base vacía, así que nunca las crearía).
+  try {
+    const storeCount = db.prepare("SELECT COUNT(*) AS c FROM stores").get().c;
+    if (storeCount === 0) {
+      db.prepare(
+        `INSERT INTO stores (code, name, address, city, region, phone, hours, is_pickup, is_active, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, 1)`
+      ).run(
+        "san-diego",
+        "TecnoGamer San Diego",
+        "Santiago 965, Local 14",
+        "Santiago",
+        "Región Metropolitana",
+        "+56 2 2560 0040",
+        "Lun–Sáb 10:30–19:30"
+      );
+      applied.push("stores(seed: san-diego)");
+    }
+  } catch (_) { /* tabla ausente en bases muy antiguas */ }
+
+  const defaultSettings = [
+    ["store_enabled", "1"],
+    ["store_name", "TecnoGamer San Diego"],
+    ["store_address", "Santiago 965, Local 14, San Diego"],
+    ["store_hours", "Lun–Sáb 10:30–19:30"],
+    ["store_phone", "+56 2 2560 0040"],
+    ["store_pickup_enabled", "1"],
+    ["store_pickup_ready_minutes", "90"],
+    ["payment_gateway_enabled", "0"],
+    ["payment_gateway_provider", ""],
+    ["cart_mode", "purchase_order"],
+    ["address", "Santiago 965, Local 14, San Diego"],
+    // ─── Módulo de taller / seguimiento de reparaciones ───
+    ["repair_enabled", "1"],
+    ["repair_name", "Taller TecnoGamer"],
+    ["repair_phone", "+56 2 2560 0040"],
+    ["repair_hours", "Lun–Sáb 10:30–19:30"],
+    ["repair_address", "Santiago 965, Local 14, San Diego"],
+    ["repair_warranty_days", "90"],
+    ["repair_intro", "Consulta el estado de tu equipo con tu orden de trabajo, RUT y número de serie."],
+  ];
+  for (const [k, v] of defaultSettings) {
+    const exists = db.prepare("SELECT 1 AS x FROM site_settings WHERE key = ?").get(k);
+    if (!exists) {
+      db.prepare("INSERT INTO site_settings (key, value) VALUES (?, ?)").run(k, v);
+      applied.push(`site_settings.${k}`);
+    }
+  }
 
   if (applied.length) {
     console.log(`🔧  Migraciones aplicadas: ${applied.join(", ")}`);

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Consulta el estado de reparación de tu equipo con tu orden de trabajo, RUT y número de serie.">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Seguimiento de reparación — TecnoGamer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Signika:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="/assets/css/retail.css">
+  <link rel="stylesheet" href="/assets/css/theme-pcf.css">
+  <link rel="stylesheet" href="/assets/css/repairs.css">
+</head>
+<body class="repairs-page">
+
+<a href="#main" class="skip-link">Saltar al contenido principal</a>
+
+<header class="rp-header">
+  <div class="rp-container rp-header__inner">
+    <a href="/" class="rp-header__brand" aria-label="Volver a la tienda">
+      <span aria-hidden="true">🛠️</span>
+      <span id="rp-shop-name">TecnoGamer</span>
+    </a>
+    <a href="/" class="rp-header__back">← Volver a la tienda</a>
+  </div>
+</header>
+
+<main id="main" class="rp-main">
+  <div class="rp-container">
+
+    <div class="rp-hero">
+      <h1 class="rp-hero__title">Seguimiento de reparación</h1>
+      <p class="rp-hero__sub" id="rp-intro">
+        Consulta el estado de tu equipo con los tres datos de tu orden de trabajo.
+      </p>
+    </div>
+
+    <!-- ─── Módulo desactivado ─── -->
+    <div class="rp-card rp-disabled" id="rp-disabled" hidden>
+      <div class="rp-disabled__icon" aria-hidden="true">🔧</div>
+      <h2>Servicio no disponible</h2>
+      <p>El seguimiento de reparaciones está desactivado por el momento. Contáctanos directamente para consultar el estado de tu equipo.</p>
+      <a href="/" class="rp-btn rp-btn--primary">Volver a la tienda</a>
+    </div>
+
+    <!-- ─── Formulario de consulta ─── -->
+    <div class="rp-card" id="rp-form-card">
+      <div class="rp-steps-hint">
+        <div class="rp-steps-hint__item">
+          <span class="rp-steps-hint__num">1</span>
+          <span>Busca tu <strong>orden de trabajo</strong> en el comprobante que te entregamos.</span>
+        </div>
+        <div class="rp-steps-hint__item">
+          <span class="rp-steps-hint__num">2</span>
+          <span>Ten a mano el <strong>RUT</strong> con que registramos el equipo.</span>
+        </div>
+        <div class="rp-steps-hint__item">
+          <span class="rp-steps-hint__num">3</span>
+          <span>El <strong>número de serie</strong> está en la etiqueta del equipo.</span>
+        </div>
+      </div>
+
+      <form class="rp-form" id="rp-form" novalidate>
+        <div class="rp-field">
+          <label class="rp-label" for="rp-workorder">
+            Orden de trabajo <span class="rp-req" aria-hidden="true">*</span>
+          </label>
+          <input class="rp-input" id="rp-workorder" name="workOrder" required
+                 placeholder="OT-2026-000123" autocomplete="off" autocapitalize="characters"
+                 aria-describedby="rp-err-workorder rp-hint-workorder">
+          <span class="rp-hint" id="rp-hint-workorder">Está en el comprobante que te entregamos al recibir el equipo.</span>
+          <span class="rp-error" id="rp-err-workorder" role="alert"></span>
+        </div>
+
+        <div class="rp-row">
+          <div class="rp-field">
+            <label class="rp-label" for="rp-rut">
+              RUT <span class="rp-req" aria-hidden="true">*</span>
+            </label>
+            <input class="rp-input" id="rp-rut" name="rut" required
+                   placeholder="12.345.678-9" autocomplete="off" inputmode="text"
+                   aria-describedby="rp-err-rut rp-hint-rut">
+            <span class="rp-hint" id="rp-hint-rut">Con o sin puntos, da lo mismo.</span>
+            <span class="rp-error" id="rp-err-rut" role="alert"></span>
+          </div>
+
+          <div class="rp-field">
+            <label class="rp-label" for="rp-serial">
+              Número de serie <span class="rp-req" aria-hidden="true">*</span>
+            </label>
+            <input class="rp-input" id="rp-serial" name="serialNumber" required
+                   placeholder="SN-ABC123456" autocomplete="off" autocapitalize="characters"
+                   aria-describedby="rp-err-serial rp-hint-serial">
+            <span class="rp-hint" id="rp-hint-serial">En la etiqueta del equipo. Sin espacios ni guiones, da lo mismo.</span>
+            <span class="rp-error" id="rp-err-serial" role="alert"></span>
+          </div>
+        </div>
+
+        <div class="rp-field">
+          <label class="rp-label" for="rp-name">
+            Nombre completo <span class="rp-opt">(opcional, refuerza la seguridad)</span>
+          </label>
+          <input class="rp-input" id="rp-name" name="customerName" autocomplete="name"
+                 placeholder="Juan Pérez González" aria-describedby="rp-hint-name">
+          <span class="rp-hint" id="rp-hint-name">Si lo escribes, verificamos que coincida con la orden.</span>
+        </div>
+
+        <div class="rp-notice" id="rp-error-box" role="alert" hidden></div>
+
+        <button class="rp-btn rp-btn--primary rp-btn--block" id="rp-submit" type="submit">
+          <span id="rp-submit-text">Consultar estado</span>
+          <span class="rp-spinner" id="rp-spinner" hidden aria-hidden="true"></span>
+        </button>
+
+        <p class="rp-privacy">
+          🔒 Consultamos tu orden con los tres datos juntos para que nadie más pueda ver tu equipo.
+          Registramos cada consulta por seguridad.
+        </p>
+      </form>
+    </div>
+
+    <!-- ─── Resultado ─── -->
+    <div id="rp-result" hidden></div>
+
+  </div>
+</main>
+
+<footer class="rp-footer">
+  <div class="rp-container">
+    <p id="rp-footer-info"></p>
+    <p class="rp-footer__small">Los datos se muestran parcialmente ocultos por tu seguridad.</p>
+  </div>
+</footer>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/repairs.js"></script>
+</body>
+</html>

@@ -76,8 +76,12 @@ const API = (() => {
 
   /* ─── Endpoints ──────────────────────────────────────── */
   return {
+    request,           // exponer el cliente base para rutas ad-hoc
     sessionId,
     getToken, setToken, isLoggedIn,
+
+    // Configuración pública (módulos, tiendas, moneda)
+    config: () => request("/config"),
 
     // Catálogo
     products: (params = {}) => {

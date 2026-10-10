@@ -20,16 +20,10 @@ const Database = require("../backend/config/sqlite-compat");
 
 const DB_PATH = path.resolve(__dirname, "..", "data", "ecommerce.db");
 
-/* ─── Tiendas (patrón "retiro en tienda") ──────────────── */
+/* ─── Tienda (módulo configurable) ─────────────────────── */
+// TecnoGamer tiene UNA sola tienda física.
 const STORES = [
-  { id: "stgo-centro",   name: "Santiago Centro",  region: "RM" },
-  { id: "providencia",   name: "Providencia",      region: "RM" },
-  { id: "maipu",         name: "Maipú",            region: "RM" },
-  { id: "valparaiso",    name: "Valparaíso",       region: "V"  },
-  { id: "concepcion",    name: "Concepción",       region: "VIII" },
-  { id: "temuco",        name: "Temuco",           region: "IX" },
-  { id: "antofagasta",   name: "Antofagasta",      region: "II" },
-  { id: "la-serena",     name: "La Serena",        region: "IV" },
+  { id: "san-diego", name: "TecnoGamer San Diego", region: "RM" },
 ];
 
 /**
@@ -57,27 +51,13 @@ function cashPriceFor(price, sku) {
 }
 
 /**
- * Distribución de stock por tienda. Determinista a partir del SKU
- * para que no cambie en cada ejecución.
+ * Stock de la tienda única. Determinista para que no cambie entre ejecuciones.
+ * Con una sola tienda, todo el stock disponible está en ella.
  */
 function storeStockFor(product) {
-  const seed = product.sku.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
   const total = product.stock_quantity;
   if (total <= 0) return null;
-
-  const result = {};
-  let remaining = total;
-  // Solo algunas tiendas tienen stock, como en la realidad
-  const count = Math.min(STORES.length, 3 + (seed % 4));
-  for (let i = 0; i < count && remaining > 0; i++) {
-    const store = STORES[(seed + i * 3) % STORES.length];
-    if (result[store.id] !== undefined) continue;
-    const share = i === count - 1 ? remaining : Math.max(1, Math.floor(remaining / (count - i)));
-    const qty = Math.min(share, remaining);
-    result[store.id] = qty;
-    remaining -= qty;
-  }
-  return Object.keys(result).length ? result : null;
+  return { [STORES[0].id]: total };
 }
 
 /* ─── Ejecución ────────────────────────────────────────── */
