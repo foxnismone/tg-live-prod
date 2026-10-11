@@ -48,7 +48,7 @@ Eres un experto redactor de contenido para e-commerce. Genera una descripción d
 
 PRODUCTO: {{name}}
 CATEGORÍA: {{category}}
-PRECIO: ${{price}}
+PRECIO: \${{price}}
 ATRIBUTOS: {{attributes}}
 DESCRIPCIÓN ACTUAL: {{description}}
 
@@ -222,6 +222,16 @@ router.post("/generate-description", authenticateToken, requireRole("admin", "ve
     console.error("Error en generate-description:", err);
     if (err.message.includes("Producto no encontrado")) {
       res.status(404).json({ error: err.message, code: "NOT_FOUND" });
+    } else if (err.message.includes("no configurada")) {
+      // La IA no está configurada: NO es un fallo del servidor (500) sino
+      // una capacidad ausente. Devolver 503 con instrucciones accionables
+      // para que el operador sepa exactamente qué falta.
+      res.status(503).json({
+        error: "La generación de descripciones con IA no está configurada.",
+        code: "AI_NOT_CONFIGURED",
+        hint: "Define AI_API_URL y AI_API_KEY en el archivo .env y reinicia el servidor.",
+        configured: false,
+      });
     } else if (err.message.includes("IA API error") || err.message.includes("No se pudo parsear")) {
       res.status(502).json({ error: "Error de servicio de IA: " + err.message, code: "AI_ERROR" });
     } else {
@@ -350,6 +360,14 @@ router.post("/bulk-generate", authenticateToken, requireRole("admin"), sanitize,
     });
   } catch (err) {
     console.error("Error en bulk-generate:", err);
+    if (err.message.includes("no configurada")) {
+      return res.status(503).json({
+        error: "La generación con IA no está configurada.",
+        code: "AI_NOT_CONFIGURED",
+        hint: "Define AI_API_URL y AI_API_KEY en .env y reinicia el servidor.",
+        configured: false,
+      });
+    }
     res.status(500).json({ error: "Error en bulk generation", code: "BULK_AI_ERROR" });
   }
 });
@@ -435,6 +453,13 @@ Por favor ${requestParts}. Responde en JSON con la estructura adecuada para cada
     console.error("Error en enrich-product:", err);
     if (err.message.includes("Producto no encontrado")) {
       res.status(404).json({ error: err.message, code: "NOT_FOUND" });
+    } else if (err.message.includes("no configurada")) {
+      res.status(503).json({
+        error: "El enriquecimiento con IA no está configurado.",
+        code: "AI_NOT_CONFIGURED",
+        hint: "Define AI_API_URL y AI_API_KEY en .env y reinicia el servidor.",
+        configured: false,
+      });
     } else if (err.message.includes("IA API error")) {
       res.status(502).json({ error: err.message, code: "AI_ERROR" });
     } else {
