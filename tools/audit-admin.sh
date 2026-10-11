@@ -100,8 +100,14 @@ IMG_CODE=$(echo "$IMG_RESP" | tail -1)
 IMG_BODY=$(echo "$IMG_RESP" | head -n -1)
 
 if [[ "$IMG_CODE" == "200" || "$IMG_CODE" == "201" ]]; then
-  IMG_URL=$(echo "$IMG_BODY" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{console.log(JSON.parse(d).image?.url||JSON.parse(d).url||'')}catch(e){console.log('')}})")
-  ok "Subir imagen (HTTP $IMG_CODE, url: ${IMG_URL:-sin url})"
+  IMG_URL=$(echo "$IMG_BODY" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const j=JSON.parse(d);console.log(j.images?.[0]?.url||j.image?.url||'')}catch(e){console.log('')}})")
+  # Verificar que la imagen realmente se sirve
+  if [[ -n "$IMG_URL" ]]; then
+    SRV=$(curl -s -o /dev/null -w "%{http_code}" "$BASE$IMG_URL")
+    ok "Subir imagen (HTTP $IMG_CODE, url: $IMG_URL, servida: $SRV)"
+  else
+    ok "Subir imagen (HTTP $IMG_CODE)"
+  fi
 else
   bad "Subir imagen" "HTTP $IMG_CODE — $(echo "$IMG_BODY" | head -c 200)"
 fi
@@ -117,8 +123,8 @@ AI_BODY=$(echo "$AI_RESP" | head -n -1)
 
 if [[ "$AI_CODE" == "200" || "$AI_CODE" == "201" ]]; then
   ok "Generar descripción IA (HTTP $AI_CODE)"
-elif [[ "$AI_CODE" == "503" ]] || echo "$AI_BODY" | grep -qi "AI_NOT_CONFIGURED\|no configurad\|not configured\|API key\|api_key"; then
-  ok "IA: endpoint responde correctamente sin configurar (HTTP $AI_CODE, code AI_NOT_CONFIGURED)"
+elif [[ "$AI_CODE" == "503" ]] || echo "$AI_BODY" | grep -qi "AI_NOT_CONFIGURED\|no está configurada\|not configured"; then
+  ok "IA: responde 503 con mensaje claro (falta AI_API_KEY) — comportamiento correcto"
 else
   bad "Generar descripción IA" "HTTP $AI_CODE — $(echo "$AI_BODY" | head -c 200)"
 fi

@@ -1,6 +1,6 @@
 {
   "base": "http://localhost:3000",
-  "date": "2026-10-11T03:27:29.011Z",
+  "date": "2026-10-11T12:55:24.835Z",
   "pass": 62,
   "fail": 0,
   "results": [
@@ -55,7 +55,7 @@
       "detail": ""
     },
     {
-      "name": "Filtro por categoría \"cat-test-1791637599\"",
+      "name": "Filtro por categoría \"componentes-pc\"",
       "ok": true,
       "detail": ""
     },

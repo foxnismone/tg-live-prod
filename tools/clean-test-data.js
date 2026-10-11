@@ -33,8 +33,17 @@ db.pragma("foreign_keys = ON");
 const targets = {
   products: db.prepare(
     `SELECT id, sku, name, is_active FROM products
-     WHERE name LIKE '%E2E%' OR name LIKE '%TEST%'
-        OR sku LIKE 'E2E-%' OR sku LIKE 'TEST-%'`
+     WHERE name LIKE '%E2E%' OR name LIKE '%TEST%' OR name LIKE '%Auditoría%' OR name LIKE '%Diag%'
+        OR sku LIKE 'E2E-%' OR sku LIKE 'TEST-%' OR sku LIKE 'AUD-%' OR sku LIKE 'DIAG-%'`
+  ).all(),
+
+  // Categorías creadas por las suites de prueba (no las del catálogo real).
+  // Se borran solo si NO tienen productos asociados, para no dejar
+  // productos huérfanos apuntando a una categoría inexistente.
+  categories: db.prepare(
+    `SELECT id, name, slug FROM categories
+     WHERE (slug LIKE 'cat-test%' OR slug LIKE 'test-%' OR name LIKE 'Categoría Test%')
+       AND id NOT IN (SELECT DISTINCT category_id FROM products WHERE category_id IS NOT NULL)`
   ).all(),
 
   orders: db.prepare(
@@ -137,8 +146,16 @@ db.transaction(() => {
   }
   deleted.products = db.prepare(
     `DELETE FROM products
-     WHERE name LIKE '%E2E%' OR name LIKE '%TEST%'
-        OR sku LIKE 'E2E-%' OR sku LIKE 'TEST-%'`
+     WHERE name LIKE '%E2E%' OR name LIKE '%TEST%' OR name LIKE '%Auditoría%' OR name LIKE '%Diag%'
+        OR sku LIKE 'E2E-%' OR sku LIKE 'TEST-%' OR sku LIKE 'AUD-%' OR sku LIKE 'DIAG-%'`
+  ).run().changes;
+
+  // Categorías de prueba (después de los productos, para que ninguna quede
+  // referenciada). Solo se borran las que no tengan productos asociados.
+  deleted.categories = db.prepare(
+    `DELETE FROM categories
+     WHERE (slug LIKE 'cat-test%' OR slug LIKE 'test-%' OR name LIKE 'Categoría Test%')
+       AND id NOT IN (SELECT DISTINCT category_id FROM products WHERE category_id IS NOT NULL)`
   ).run().changes;
 
   // Pagos antes que pedidos

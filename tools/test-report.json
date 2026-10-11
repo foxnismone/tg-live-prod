@@ -1,6 +1,6 @@
 {
   "base": "http://localhost:3000",
-  "date": "2026-10-11T03:27:27.013Z",
+  "date": "2026-10-11T12:55:23.122Z",
   "pass": 61,
   "fail": 0,
   "results": [
@@ -57,7 +57,7 @@
     {
       "name": "orden price-asc correcto",
       "ok": true,
-      "detail": "[39.99,59.99,79.99,89.99,129.99,199.99,249.99,49990,54990,59990,59990,79990]"
+      "detail": "[39.99,59.99,79.99,89.99,129.99,199.99,249.99,49990,54990,59990,59990,129990]"
     },
     {
       "name": "filtro de precio funciona",
@@ -107,7 +107,7 @@
     {
       "name": "categories[] no vacío",
       "ok": true,
-      "detail": "len=14"
+      "detail": "len=8"
     },
     {
       "name": "categoría tiene product_count",
@@ -115,12 +115,12 @@
       "detail": ""
     },
     {
-      "name": "GET /categories/slug/cat-test-1791637599 → 200",
+      "name": "GET /categories/slug/componentes-pc → 200",
       "ok": true,
       "detail": "status=200"
     },
     {
-      "name": "GET /products/category/cat-test-1791637599 → 200",
+      "name": "GET /products/category/componentes-pc → 200",
       "ok": true,
       "detail": "status=200"
     },
@@ -132,7 +132,7 @@
     {
       "name": "POST /cart/items como invitado → 200/201",
       "ok": true,
-      "detail": "status=201 {\"message\":\"Item agregado al carrito\",\"cart\":{\"id\":697,\"sessionId\":\"session-1791689245838-4qiz55nb6\",\"items\":[{\"productId\":77,\"variantId\":null,\"quanti"
+      "detail": "status=201 {\"message\":\"Item agregado al carrito\",\"cart\":{\"id\":702,\"sessionId\":\"session-1791723322211-bt09bdobn\",\"items\":[{\"productId\":9,\"variantId\":null,\"quantit"
     },
     {
       "name": "GET /cart/summary → 200",
